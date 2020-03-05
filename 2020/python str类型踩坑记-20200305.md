@@ -25,15 +25,15 @@
   先来看看`golang`类似情况的处理
 
   ```go
-  	var bf bytes.Buffer
-  	bf.WriteByte('a')
-  	var b []byte
-  	b = append(b, 'a')
-  	var str string
-  	str = "a"
-  	fmt.Println(str == bf.String())
-  	fmt.Println(str == string(b))
-  	fmt.Println(string(b) == bf.String())
+  var bf bytes.Buffer
+  bf.WriteByte('a')
+  var b []byte
+  b = append(b, 'a')
+  var str string
+  str = "a"
+  fmt.Println(str == bf.String())
+  fmt.Println(str == string(b))
+  fmt.Println(string(b) == bf.String())
   ```
 
   Output:
@@ -57,3 +57,4 @@
   ```
 
   
+
