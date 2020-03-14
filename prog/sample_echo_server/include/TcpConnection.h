@@ -5,6 +5,7 @@
 #ifndef SAMPLE_ECHO_SERVER_TCP_CONNECTION_H
 #define SAMPLE_ECHO_SERVER_TCP_CONNECTION_H
 
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <sys/socket.h>
@@ -16,6 +17,8 @@
 #include <fcntl.h>
 #include "Dispatcher.h"
 #include "TcpSession.h"
+
+#define DEBUG_LOG_INFO__ printf
 
 
 namespace SZ {

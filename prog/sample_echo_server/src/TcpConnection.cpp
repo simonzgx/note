@@ -75,21 +75,19 @@ void SZ::TcpConnection::OnError(int fd) {
 
 void SZ::TcpConnection::OnAccept() {
     sockaddr_in client;
-#ifdef _MSC_VER
-    int addr_len = sizeof(sockaddr_in);
-#else
+
     socklen_t addr_len = sizeof(sockaddr_in);
-#endif
+
 
     int new_sock = accept(_sock, (sockaddr *) &client, &addr_len);
     if (new_sock < 0) {
-        printf("accept fail ... \n");
+        DEBUG_LOG_INFO__ ("accept fail ... \n");
         return;
     }
 
     SetNonblock(new_sock);
 
-    printf("A new client connected. [%s:%d]", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+    DEBUG_LOG_INFO__ ("A new client connected. [%s:%d] \n", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 
     CreateEvent(new_sock, SOCKET_READ | SOCKET_EXCEP);
     TcpSession *ct = Accept(new_sock, inet_ntoa(client.sin_addr), ntohs(client.sin_port), this);
@@ -102,7 +100,7 @@ void SZ::TcpConnection::SetNonblock(int fd) {
     //设置fd为非阻塞
     int ret = fcntl(fd, F_SETFL, O_NONBLOCK | fcntl(fd, F_GETFL));
     if (ret < 0) {
-        printf("_SetNonblock failed, ret_code=%d", ret);
+        DEBUG_LOG_INFO__ ("_SetNonblock failed, ret_code=%d", ret);
     }
 }
 
