@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated>
+      <config projectName="sample_echo_server" targetName="sample_echo_server" />
+    </generated>
+  </component>
+  <component name="CMakeSettings" AUTO_RELOAD="true">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f93a6348-0bd0-42bc-acb7-89d14b818c23" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="ProjectId" id="1Z6zVccp3vv7x3Gd6zPxkMMssF9" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="sample_echo_server" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="sample_echo_server" TARGET_NAME="sample_echo_server" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="sample_echo_server" RUN_TARGET_NAME="sample_echo_server">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f93a6348-0bd0-42bc-acb7-89d14b818c23" name="Default Changelist" comment="" />
+      <created>1584174356548</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1584174356548</updated>
+      <workItem from="1584174358321" duration="8565000" />
+      <workItem from="1584185833310" duration="1684000" />
+      <workItem from="1584187536822" duration="2940000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="444" y="141" key="FileChooserDialogImpl" timestamp="1584187007820">
+      <screen x="65" y="24" width="1301" height="744" />
+    </state>
+    <state x="444" y="141" key="FileChooserDialogImpl/65.24.1301.744@65.24.1301.744" timestamp="1584187007820" />
+    <state x="327" y="71" width="776" height="622" key="find.popup" timestamp="1584190501560">
+      <screen x="65" y="24" width="1301" height="744" />
+    </state>
+    <state x="327" y="71" width="776" height="622" key="find.popup/65.24.1301.744@65.24.1301.744" timestamp="1584190501560" />
+    <state x="465" y="24" key="refactoring.ChangeSignatureDialog" timestamp="1584185577842">
+      <screen x="65" y="24" width="1301" height="744" />
+    </state>
+    <state x="465" y="24" key="refactoring.ChangeSignatureDialog/65.24.1301.744@65.24.1301.744" timestamp="1584185577842" />
+  </component>
+</project>
