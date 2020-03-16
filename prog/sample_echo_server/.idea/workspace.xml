@@ -11,7 +11,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f93a6348-0bd0-42bc-acb7-89d14b818c23" name="Default Changelist" comment="" />
+    <list default="true" id="f93a6348-0bd0-42bc-acb7-89d14b818c23" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -33,7 +35,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$USER_HOME$/CLionProjects/untitled" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -46,6 +48,18 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -60,6 +74,8 @@
       <workItem from="1584174358321" duration="8565000" />
       <workItem from="1584185833310" duration="1684000" />
       <workItem from="1584187536822" duration="4631000" />
+      <workItem from="1584266626565" duration="20000" />
+      <workItem from="1584266659840" duration="32000" />
     </task>
     <servers />
   </component>
@@ -67,14 +83,15 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="444" y="141" key="FileChooserDialogImpl" timestamp="1584187007820">
-      <screen x="65" y="24" width="1301" height="744" />
-    </state>
-    <state x="444" y="141" key="FileChooserDialogImpl/65.24.1301.744@65.24.1301.744" timestamp="1584187007820" />
-    <state x="1184" y="381" key="com.intellij.ide.util.TipDialog" timestamp="1584253766354">
+    <state x="597" y="175" key="FileChooserDialogImpl" timestamp="1584266689035">
       <screen x="0" y="0" width="2048" height="1112" />
     </state>
-    <state x="1184" y="381" key="com.intellij.ide.util.TipDialog/0.0.2048.1112@0.0.2048.1112" timestamp="1584253766354" />
+    <state x="597" y="175" key="FileChooserDialogImpl/0.0.2048.1112@0.0.2048.1112" timestamp="1584266689035" />
+    <state x="444" y="141" key="FileChooserDialogImpl/65.24.1301.744@65.24.1301.744" timestamp="1584187007820" />
+    <state x="1184" y="381" key="com.intellij.ide.util.TipDialog" timestamp="1584266660051">
+      <screen x="0" y="0" width="2048" height="1112" />
+    </state>
+    <state x="1184" y="381" key="com.intellij.ide.util.TipDialog/0.0.2048.1112@0.0.2048.1112" timestamp="1584266660051" />
     <state x="327" y="71" width="776" height="622" key="find.popup" timestamp="1584192484024">
       <screen x="65" y="24" width="1301" height="744" />
     </state>
