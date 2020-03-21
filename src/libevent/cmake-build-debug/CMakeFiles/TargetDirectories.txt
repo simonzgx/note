@@ -1,0 +1,3 @@
+/home/simon/git/note/src/libevent/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/simon/git/note/src/libevent/cmake-build-debug/CMakeFiles/libevent.dir
+/home/simon/git/note/src/libevent/cmake-build-debug/CMakeFiles/edit_cache.dir
