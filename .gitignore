@@ -1,1 +1,5 @@
 .idea
+Makefile
+*.cmake
+CMakeCache.txt
+CMakeFiles
