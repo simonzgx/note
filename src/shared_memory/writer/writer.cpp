@@ -9,7 +9,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #elif __linux
-#include <string.h>
+#include <cstring>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -97,7 +97,7 @@ struct MyData
 void writeMemory()
 {
     // specify shared file path
-    char *shared_file_name = "/home/user/codetest/my_shared_memory";
+    char *shared_file_name = const_cast<char*>("/home/simon/codetest/my_shared_memory");
 
     // define shared data
     //    unsigned long buff_size = 4096;

@@ -2,7 +2,7 @@
 // Created by Simon on 2020/3/28.
 //
 
-
+#include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/sem.h>
+
+using namespace std;
 
 union semun
 {
@@ -28,41 +30,25 @@ static int semaphore_v();
 
 int main(int argc, char *argv[])
 {
-    char message = 'X';
     int i = 0;
 
     //创建信号量
     sem_id = semget((key_t)1234, 1, 0666 | IPC_CREAT);
 
-    if(argc > 1)
-    {
-        //程序第一次被调用，初始化信号量
-        if(!set_semvalue())
-        {
-            fprintf(stderr, "Failed to initialize semaphore\n");
-            exit(EXIT_FAILURE);
-        }
-        //设置要输出到屏幕中的信息，即其参数的第一个字符
-        message = argv[1][0];
-        sleep(2);
-    }
-    for(i = 0; i < 10; ++i)
+    while(true)
     {
         //进入临界区
+        cout<<"consumer wait\n";
         if(!semaphore_p())
             exit(EXIT_FAILURE);
         //向屏幕中输出数据
-        printf("%c", message);
-        //清理缓冲区，然后休眠随机时间
-        fflush(stdout);
+        cout<<"consumer...\n";
         sleep(rand() % 3);
-        //离开临界区前再一次向屏幕输出数据
-        printf("%c", message);
-        fflush(stdout);
         //离开临界区，休眠随机时间后继续循环
         if(!semaphore_v())
             exit(EXIT_FAILURE);
-        sleep(rand() % 2);
+        cout<<"consumer done\n";
+        sleep(rand() % 1);
     }
 
     sleep(10);
