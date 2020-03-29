@@ -10,7 +10,9 @@
 #include <windows.h>
 #elif __linux
 #include <cstring>
+#include <string>
 #include <sys/mman.h>
+#include <sys/sem.h>
 #include <fcntl.h>
 #include <unistd.h>
 #endif
@@ -94,16 +96,37 @@ struct MyData
     int age;
 };
 
+union semun
+{
+    int val;
+    struct semid_ds *buf;
+    unsigned short *arry;
+};
+
+static int sem_id = 0;
+static inline int set_sem();
+static inline void del_sem();
+static inline int sem_p();
+static inline int sem_v();
+
+
 void writeMemory()
 {
+
+    sem_id = semget((key_t)333, 1, 0666|IPC_CREAT);
+    if(!set_sem()){
+        perror("init semaphore error");
+        exit(EXIT_FAILURE);
+    }
+
+
     // specify shared file path
-    char *shared_file_name = const_cast<char*>("/home/simon/codetest/my_shared_memory");
+    char *shared_file_name = const_cast<char*>("/home/simon/my_shared_memory.txt");
 
     // define shared data
     //    unsigned long buff_size = 4096;
-    //    char share_buffer[] = "greetings, hello world";
+    char share_buffer[BUFSIZ+1];
     //    MyData share_buffer("Tom", 18);
-    MyData share_buffer = { "Tom", 18 };
 
     // create mmap file
     int fd = open(shared_file_name, O_CREAT | O_RDWR | O_TRUNC, 00777);
@@ -111,22 +134,33 @@ void writeMemory()
         cout << "create file error" << endl;
 
     size_t write_size = sizeof(share_buffer);
-
+    memset(&share_buffer, 0, write_size);
     ftruncate(fd, write_size); // extend file size
 
     // map memory to file
     void *p = mmap(NULL, write_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    do{
+        memset(&share_buffer, 0, write_size);
+        printf("enter some text\n");
+        if (!sem_p()){
+            perror("sem_p error");
+            exit(EXIT_FAILURE);
+        }
+        fgets(share_buffer, BUFSIZ, stdin);
+        memcpy(p, &share_buffer, write_size);
+        //flush到磁盘
+        msync(p, write_size, MS_SYNC);
+        printf("write data done\n");
 
-    // copy data to shared memory
-    memcpy(p, &share_buffer, write_size);
-
-    cout << "already write to shared memory, wait ..." << endl;
-    //cout << share_buffer << endl;
-    this_thread::sleep_for(chrono::seconds(10));
-
+        if (!sem_v()){
+            perror("sem_v error");
+            exit(EXIT_FAILURE);
+        }
+    } while(strncmp(share_buffer, "end", 3)!=0);
     // unmap and close
     munmap(p, write_size);
     close(fd);
+    del_sem();
 
 }
 #endif
@@ -137,3 +171,42 @@ int main()
 
     return 0;
 }
+
+static inline int set_sem(){
+    union semun sem_union{};
+    sem_union.val = 1;
+    if(semctl(sem_id, 0, SETVAL, sem_union) == -1)
+        return 0;
+    return 1;
+}
+
+static inline void del_sem(){
+    union semun sem_union{};
+    if(semctl(sem_id, 0, IPC_RMID, sem_union) == -1)
+        perror("del sem id error");
+}
+
+static inline int sem_p(){
+    struct sembuf sem_buff{};
+    sem_buff.sem_num = 0;
+    sem_buff.sem_op = -1;
+    sem_buff.sem_flg = SEM_UNDO;
+    if(semop(sem_id, &sem_buff, 1) == -1){
+        perror("set op error");
+        return 0;
+    }
+    return 1;
+}
+
+static inline int sem_v(){
+    struct sembuf sem_buff{};
+    sem_buff.sem_flg = SEM_UNDO;
+    sem_buff.sem_op = 1;
+    sem_buff.sem_num = 0;
+    if(semop(sem_id, &sem_buff, 1)==-1){
+        perror("sem_v error");
+        return 0;
+    }
+    return 1;
+}
+

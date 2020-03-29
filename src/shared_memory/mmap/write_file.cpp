@@ -14,7 +14,7 @@
 
 int main(int argc, char **argv)
 {
-    int fd, nread, i;
+    int fd, i;
     struct stat sb{};
     char *mapped, buf[BUF_SIZE];
 

@@ -10,8 +10,11 @@
 #include <cstdlib>
 #include <cstdio>
 #include <sys/sem.h>
+#include <sys/mman.h>
 
 using namespace std;
+
+#define FILE_PATH "../test.txt"
 
 union semun
 {
@@ -29,6 +32,24 @@ static int semaphore_v();
 
 int main(int argc, char *argv[])
 {
+    int fd;
+    struct stat fs{};
+    char *mapped_mem, buf[1024];
+
+    if ((fd = open(argv[1], O_RDWR)) < 0) {
+        perror("open");
+    }
+    if(fstat(fd, &fs)==-1){
+        perror("fstat error");
+    }
+
+    if((mapped_mem = static_cast<char*>(mmap(nullptr, fs.st_size,
+            PROT_WRITE|PROT_READ, MAP_SHARED, fd, 0)))==(void*)-1){
+        perror("mmap");
+    }
+
+    close(fd);
+
     int i = 0;
 
     //创建信号量
