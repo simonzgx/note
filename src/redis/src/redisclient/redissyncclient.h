@@ -13,7 +13,7 @@
 #include <list>
 #include <functional>
 
-#include "redisclient/impl/redisclientimpl.h"
+#include "impl/redisclientimpl.h"
 #include "redisbuffer.h"
 #include "redisvalue.h"
 #include "config.h"
@@ -27,8 +27,8 @@ class RedisSyncClient : boost::noncopyable {
 public:
     typedef RedisClientImpl::State State;
 
-    REDIS_CLIENT_DECL RedisSyncClient(boost::asio::io_service &ioService);
-    REDIS_CLIENT_DECL RedisSyncClient(RedisSyncClient &&other);
+    REDIS_CLIENT_DECL explicit RedisSyncClient(boost::asio::io_service &ioService);
+    REDIS_CLIENT_DECL RedisSyncClient(RedisSyncClient &&other) noexcept ;
     REDIS_CLIENT_DECL ~RedisSyncClient();
 
     // Connect to redis server
@@ -103,7 +103,7 @@ private:
 }
 
 #ifdef REDIS_CLIENT_HEADER_ONLY
-#include "redisclient/impl/redissyncclient.cpp"
+#include "impl/redissyncclient.cpp"
 #endif
 
 #endif // REDISSYNCCLIENT_REDISCLIENT_H

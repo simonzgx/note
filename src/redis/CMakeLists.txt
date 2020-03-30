@@ -5,8 +5,9 @@ project(redis_cpp)
 set(CMAKE_CXX_STANDARD 14)
 
 set(INCLUDE_DIR include)
-set(SRC_DIR src)
+aux_source_directory(. SRC_DIR)
 
+list(APPEND INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/redisclient)
 
 find_package(boost)
 if (Boost_FOUND)
@@ -16,7 +17,5 @@ else ()
 endif ()
 
 include_directories(${INCLUDE_DIR})
+
 add_executable(redis_client main.cpp ${SRC_DIR})
-
-
-add_subdirectory(src)

@@ -53,6 +53,6 @@ private:
 }
 
 #ifdef REDIS_CLIENT_HEADER_ONLY
-#include "redisclient/impl/pipeline.cpp"
+#include "impl/pipeline.cpp"
 #endif
 

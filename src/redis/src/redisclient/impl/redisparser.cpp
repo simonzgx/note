@@ -13,7 +13,7 @@
 #include <iostream>
 #endif
 
-#include "redisclient/redisparser.h"
+#include "redisparser.h"
 
 namespace redisclient {
 

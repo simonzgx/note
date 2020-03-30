@@ -21,9 +21,9 @@
 #include <functional>
 #include <memory>
 
-#include "redisclient/redisparser.h"
-#include "redisclient/redisbuffer.h"
-#include "redisclient/config.h"
+#include "redisparser.h"
+#include "redisbuffer.h"
+#include "config.h"
 
 namespace redisclient {
 
@@ -37,7 +37,7 @@ public:
         Closed
     };
 
-    REDIS_CLIENT_DECL RedisClientImpl(boost::asio::io_service &ioService);
+    REDIS_CLIENT_DECL explicit RedisClientImpl(boost::asio::io_service &ioService);
     REDIS_CLIENT_DECL ~RedisClientImpl();
 
     REDIS_CLIENT_DECL void handleAsyncConnect(
@@ -146,7 +146,7 @@ inline std::string to_string(RedisClientImpl::State state)
 }
 
 
-#ifdef REDIS_CLIENT_HEADER_ONLY
+#ifndef REDIS_CLIENT_HEADER_ONLY
 #include "redisclientimpl.cpp"
 #endif
 
