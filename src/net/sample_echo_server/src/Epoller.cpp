@@ -7,8 +7,7 @@
 
 SZ::Epoller::Epoller() {
     _fd = epoll_create(1024);
-    if (_fd == -1)
-    {
+    if (_fd == -1) {
         DEBUG_LOG_INFO__("epoll_create failed");
     }
 }
@@ -20,30 +19,26 @@ SZ::Epoller::~Epoller() {
 void SZ::Epoller::CreateEvent(int fd, unsigned char socket_event) {
     struct epoll_event ev{};
     ev.events = 0;
-    if ((socket_event & SOCKET_READ) != 0)
-    {
+    if ((socket_event & SOCKET_READ) != 0) {
         ev.events |= EPOLLIN;
     }
 
-    if ((socket_event & SOCKET_WRITE) != 0)
-    {
+    if ((socket_event & SOCKET_WRITE) != 0) {
         ev.events |= EPOLLOUT;
     }
 
-    if ((socket_event & SOCKET_EXCEP) != 0)
-    {
+    if ((socket_event & SOCKET_EXCEP) != 0) {
         ev.events |= EPOLLERR;
     }
     ev.data.fd = fd;
-    if (epoll_ctl(_fd, EPOLL_CTL_ADD, fd, &ev) != 0)
-    {
+    if (epoll_ctl(_fd, EPOLL_CTL_ADD, fd, &ev) != 0) {
         DEBUG_LOG_INFO__("epoll_ctl() failed, errno=%d", errno);
     }
 }
 
 void SZ::Epoller::DoEvent() {
     struct epoll_event revs[1024];
-    int n = sizeof(revs)/sizeof(revs[0]);
+    int n = sizeof(revs) / sizeof(revs[0]);
     int timeout = 1000;
     int num = 0;
 
@@ -63,15 +58,14 @@ void SZ::Epoller::DoEvent() {
         int fd = revs[i].data.fd;
 
         if (revs[i].events & EPOLLIN) {
-            auto it = std::find_if(_servers.begin(), _servers.end(), [=](auto& item){
+            auto it = std::find_if(_servers.begin(), _servers.end(), [=](auto &item) {
                 return item->_sock == fd;
             });
 
             if (it != _servers.end()) {
                 (*it)->OnAccept();
-            }
-            else {
-                for (auto& item : _servers) {
+            } else {
+                for (auto &item : _servers) {
                     item->OnRead(fd);
                 }
             }
@@ -79,14 +73,14 @@ void SZ::Epoller::DoEvent() {
 
         //
         if (revs[i].events & EPOLLOUT) {
-            for (auto& item : _servers) {
+            for (auto &item : _servers) {
                 item->OnWrite(fd);
             }
         }
 
         //
         if (revs[i].events & EPOLLERR) {
-            for (auto& item : _servers) {
+            for (auto &item : _servers) {
                 item->OnError(fd);
             }
         }

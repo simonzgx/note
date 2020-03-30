@@ -5,18 +5,21 @@
 #include <mutex>
 
 
-class spinlock{
+class spinlock {
     std::atomic_flag _lk{};
 public:
-    spinlock(){_lk.clear();}
-    inline void lock(){while (_lk.test_and_set(std::memory_order_acquire));}
-    inline void unlock(){_lk.clear(std::memory_order_acquire);}
+    spinlock() { _lk.clear(); }
+
+    inline void lock() { while (_lk.test_and_set(std::memory_order_acquire)); }
+
+    inline void unlock() { _lk.clear(std::memory_order_acquire); }
 };
 
-class mutex{
+class mutex {
 private:
     std::mutex _lk;
 public:
-    inline void lock(){_lk.lock();}
-    inline void unlock(){_lk.unlock();}
+    inline void lock() { _lk.lock(); }
+
+    inline void unlock() { _lk.unlock(); }
 };

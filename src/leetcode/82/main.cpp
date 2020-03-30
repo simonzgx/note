@@ -15,9 +15,9 @@ struct ListNode {
 };
 
 ListNode *deleteDuplicates(ListNode *head) {
-    if(head== nullptr) return nullptr;
-    if(head->next == nullptr) return head;
-    ListNode *ret = new ListNode(-1), *cur = ret, *next= nullptr;
+    if (head == nullptr) return nullptr;
+    if (head->next == nullptr) return head;
+    ListNode *ret = new ListNode(-1), *cur = ret, *next = nullptr;
     ret->next = head;
     while (cur->next) {
         next = cur->next;

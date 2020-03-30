@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+
 #ifdef _WIN32
 #include <windows.h>
 #elif __linux
@@ -130,46 +131,45 @@ void readMemory()
 }
 #endif
 
-int main()
-{
+int main() {
     readMemory();
 
     return 0;
 }
 
 
-static inline int set_sem(){
+static inline int set_sem() {
     union semun sem_union{};
     sem_union.val = 1;
-    if(semctl(sem_id, 0, SETVAL, sem_union) == -1)
+    if (semctl(sem_id, 0, SETVAL, sem_union) == -1)
         return 0;
     return 1;
 }
 
-static inline void del_sem(){
+static inline void del_sem() {
     union semun sem_union{};
-    if(semctl(sem_id, 0, IPC_RMID, sem_union) == -1)
+    if (semctl(sem_id, 0, IPC_RMID, sem_union) == -1)
         perror("del sem id error");
 }
 
-static inline int sem_p(){
+static inline int sem_p() {
     struct sembuf sem_buff{};
     sem_buff.sem_num = 0;
     sem_buff.sem_op = -1;
     sem_buff.sem_flg = SEM_UNDO;
-    if(semop(sem_id, &sem_buff, 1) == -1){
+    if (semop(sem_id, &sem_buff, 1) == -1) {
         perror("set op error");
         return 0;
     }
     return 1;
 }
 
-static inline int sem_v(){
+static inline int sem_v() {
     struct sembuf sem_buff{};
     sem_buff.sem_flg = SEM_UNDO;
     sem_buff.sem_op = 1;
     sem_buff.sem_num = 0;
-    if(semop(sem_id, &sem_buff, 1)==-1){
+    if (semop(sem_id, &sem_buff, 1) == -1) {
         perror("sem_v error");
         return 0;
     }

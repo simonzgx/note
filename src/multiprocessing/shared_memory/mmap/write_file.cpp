@@ -12,8 +12,7 @@
 
 #define BUF_SIZE 100
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int fd, i;
     struct stat sb{};
     char *mapped, buf[BUF_SIZE];
@@ -33,8 +32,8 @@ int main(int argc, char **argv)
     }
 
     /* 将文件映射至进程的地址空间 */
-    if ((mapped = (char *)mmap(NULL, sb.st_size, PROT_READ |
-                                                 PROT_WRITE, MAP_SHARED, fd, 0)) == (void *)-1) {
+    if ((mapped = (char *) mmap(NULL, sb.st_size, PROT_READ |
+                                                  PROT_WRITE, MAP_SHARED, fd, 0)) == (void *) -1) {
         perror("mmap");
     }
 
@@ -45,12 +44,12 @@ int main(int argc, char **argv)
 
     /* 修改一个字符,同步到磁盘文件 */
     mapped[20] = '9';
-    if ((msync((void *)mapped, sb.st_size, MS_SYNC)) == -1) {
+    if ((msync((void *) mapped, sb.st_size, MS_SYNC)) == -1) {
         perror("msync");
     }
 
     /* 释放存储映射区 */
-    if ((munmap((void *)mapped, sb.st_size)) == -1) {
+    if ((munmap((void *) mapped, sb.st_size)) == -1) {
         perror("munmap");
     }
 
