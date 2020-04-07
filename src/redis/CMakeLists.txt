@@ -19,3 +19,5 @@ endif ()
 include_directories(${INCLUDE_DIR})
 
 add_executable(redis_client main.cpp ${SRC_DIR})
+
+add_subdirectory(src/redisclient)

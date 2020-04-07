@@ -24,7 +24,7 @@ RedisSyncClient::RedisSyncClient(boost::asio::io_service &ioService)
     pimpl->errorHandler = std::bind(&RedisClientImpl::defaulErrorHandler, std::placeholders::_1);
 }
 
-RedisSyncClient::RedisSyncClient(RedisSyncClient &&other)
+RedisSyncClient::RedisSyncClient(RedisSyncClient &&other) noexcept
     : pimpl(std::move(other.pimpl)),
     connectTimeout(std::move(other.connectTimeout)),
     commandTimeout(std::move(other.commandTimeout)),

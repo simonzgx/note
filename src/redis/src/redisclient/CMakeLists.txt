@@ -140,3 +140,4 @@ else()
   )
 endif()
 
+include_directories(${hdrs})
