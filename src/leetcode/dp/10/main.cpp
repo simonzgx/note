@@ -1,42 +1,36 @@
-//
-// Created by Simon on 2020/4/4.
-//
-
 #include <iostream>
-#include <vector>
-#include <queue>
-#include <cstdlib>
+#include <string>
+#include <algorithm>
 
 using namespace std;
 
+
 class Solution {
 public:
+    static string reverseWords(string s) {
+        // 反转整个字符串
+        reverse(s.begin(), s.end());
 
-    bool isMatch(char c, string s) {
-        if (s[0] == c || s[0] == '.')return true;
-        return s.size() == 2 && s[0] == '.';
-    }
+        int n = s.size();
+        int idx = 0;
+        for (int start = 0; start < n; ++start) {
+            if (s[start] != ' ') {
+                // 填一个空白字符然后将idx移动到下一个单词的开头位置
+                if (idx != 0) s[idx++] = ' ';
 
-    bool isMatch(string s, string p) {
-        vector<string> elements;
-        for (int i = 0; i < p.size() - 1; ++i) {
-            if (p[i + 1] == '*') {
-                elements.emplace_back(p.substr(i, 2));
-            } else {
-                elements.emplace_back(p.substr(i, 1));
+                // 循环遍历至单词的末尾
+                int end = start;
+                while (end < n && s[end] != ' ') s[idx++] = s[end++];
+
+                // 反转整个单词
+                reverse(s.begin() + idx - (end - start), s.begin() + idx);
+
+                // 更新start，去找下一个单词
+                start = end;
             }
         }
-        for(int i=0;i<elements.size();++i){
-            for(int j=0;j<s.size();++j){
-                if ()
-            }
-        }
+        s.erase(s.begin() + idx, s.end());
+        return s;
     }
 };
 
-int main() {
-    vector<int> nums{8, -19, 5, -4, 20};
-    Solution s;
-    string s1 = "abcd";
-    cout << s1.substr(2, 2) << endl;
-}
