@@ -48,5 +48,15 @@ int main() {
             .command("SET", {"age", "18"})
             .command("INCR", {"age"});
 
+    result = pipeline.finish();
+
+    if (result.isOk()){
+        for (const auto& i : result.toArray()){
+            std::cout<<"Result:"<<i.inspect()<<"\n";
+        }
+        return EXIT_SUCCESS;
+    }
+    std::cerr<<"Get error:" << result.toString()<<std::endl;
+    return EXIT_FAILURE;
 
 }
