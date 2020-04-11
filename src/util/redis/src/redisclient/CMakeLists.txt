@@ -1,20 +1,20 @@
 set(hdrs config.h
-         pipeline.h
-         redisasyncclient.h
-         redisbuffer.h
-         redisparser.h
-         redissyncclient.h
-         redisvalue.h
-         version.h
-         impl/redisclientimpl.h
-         impl/throwerror.h
+        pipeline.h
+        redisasyncclient.h
+        redisbuffer.h
+        redisparser.h
+        redissyncclient.h
+        redisvalue.h
+        version.h
+        impl/redisclientimpl.h
+        impl/throwerror.h
 )
 set(srcs impl/pipeline.cpp
-         impl/redisasyncclient.cpp
-         impl/redisclientimpl.cpp
-         impl/redisparser.cpp
-         impl/redissyncclient.cpp
-         impl/redisvalue.cpp
+        impl/redisasyncclient.cpp
+        impl/redisclientimpl.cpp
+        impl/redisparser.cpp
+        impl/redissyncclient.cpp
+        impl/redisvalue.cpp
 )
 
 # Function for installing headers
@@ -30,7 +30,7 @@ function(RedisClientInstallHeaders)
 
   # Install the headers (and sources because of the header-only mode)
   file(RELATIVE_PATH module_path ${CMAKE_SOURCE_DIR}/src
-          ${CMAKE_CURRENT_SOURCE_DIR})
+          .)
   foreach (HDR ${RedisClientInstallHeaders_HEADERS})
     get_filename_component(path_within_module ${HDR} DIRECTORY)
     if (path_within_module STREQUAL "")
