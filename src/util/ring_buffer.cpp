@@ -10,7 +10,7 @@ ring_buffer<_Tp>::ring_buffer(size_t size): _size(size) {
 }
 
 template<class _Tp>
-void ring_buffer<_Tp>::skip(int size) {
+void ring_buffer<_Tp>::skip(size_t size) {
     if (size > _used) {
         _r_offset = _w_offset;
         _used = 0;
@@ -21,8 +21,8 @@ void ring_buffer<_Tp>::skip(int size) {
 }
 
 template<class _Tp>
-int ring_buffer<_Tp>::read(_Tp *out, int size) {
-    int read_size = size > _used ? _used : size;
+int ring_buffer<_Tp>::read(_Tp *out, size_t size) {
+    int read_size = std::min(size, _used);
     int to_end = std::min(read_size, _size - _r_offset);
     memcpy(out, _buf[_r_offset], to_end);
     if (to_end < read_size) {
@@ -34,7 +34,7 @@ int ring_buffer<_Tp>::read(_Tp *out, int size) {
 }
 
 template<class _Tp>
-int ring_buffer<_Tp>::write(const _Tp *value, int size) {
+int ring_buffer<_Tp>::write(const _Tp *value, size_t size) {
     if (!value || !size)return 0;
     int write_size = std::min(_size - _used, size);
     int to_end = std::min(write_size, _size - _w_offset);
@@ -50,5 +50,29 @@ int ring_buffer<_Tp>::write(const _Tp *value, int size) {
 template<class _Tp>
 ring_buffer<_Tp>::~ring_buffer() {
     free(_buf);
+}
+
+template<class _Tp>
+size_t ring_buffer<_Tp>::capacity() {
+    return _size;
+}
+
+template<class _Tp>
+size_t ring_buffer<_Tp>::size() {
+    return _used;
+}
+
+template<class _Tp>
+void ring_buffer<_Tp>::clear() {
+    _used = 0;
+    _r_offset = _w_offset = 0;
+}
+
+template<class _Tp>
+void ring_buffer<_Tp>::resize(size_t size) {
+    _Tp *new_buf = static_cast<_Tp *>(malloc(sizeof(_Tp) * size));
+    memcpy(_buf, new_buf, _size);
+    _size = size;
+    _buf = new_buf;
 }
 
