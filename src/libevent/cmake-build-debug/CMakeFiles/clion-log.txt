@@ -1,0 +1,20 @@
+/home/simon/clion-2019.3.5/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/simon/git/note/src/libevent
+CMake Error at CMakeLists.txt:14 (find_package):
+  By not providing "Findlibevent.cmake" in CMAKE_MODULE_PATH this project has
+  asked CMake to find a package configuration file provided by "libevent",
+  but CMake did not find one.
+
+  Could not find a package configuration file provided by "libevent" with any
+  of the following names:
+
+    libeventConfig.cmake
+    libevent-config.cmake
+
+  Add the installation prefix of "libevent" to CMAKE_PREFIX_PATH or set
+  "libevent_DIR" to a directory containing one of the above files.  If
+  "libevent" provides a separate development package or SDK, be sure it has
+  been installed.
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/simon/git/note/src/libevent/CMakeFiles/CMakeOutput.log".

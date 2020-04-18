@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/simon/git/note/src/semaphore/consumer/sem_consumer.cpp
+iostream
+-
+unistd.h
+-
+sys/types.h
+-
+sys/stat.h
+-
+fcntl.h
+-
+stdlib.h
+-
+stdio.h
+-
+string.h
+-
+sys/sem.h
+-
+

@@ -22,27 +22,39 @@ namespace util {
 //      MD5(std::string).hexdigest()
 //
 // assumes that char is 8 bit and int is 32 bit
-    class md5
-    {
+    class md5 {
     public:
         typedef unsigned int size_type; // must be 32bit
 
         md5();
-        explicit md5(const std::string& text);
+
+        explicit md5(const std::string &text);
+
         void update(const unsigned char *buf, size_type length);
+
         void update(const char *buf, size_type length);
-        md5& finalize();
+
+        md5 &finalize();
+
         std::string hexDigest() const;
+
         std::string rawDigest() const;
-        friend std::ostream& operator<<(std::ostream&, md5 md5);
+
+        friend std::ostream &operator<<(std::ostream &, md5 md5);
+
     private:
         void init();
+
         typedef uint8_t uint1; //  8bit
         typedef uint32_t uint4;  // 32bit
-        enum {blocksize = 64}; // VC6 won't eat a const static int here
+        enum {
+            blocksize = 64
+        }; // VC6 won't eat a const static int here
 
         void transform(const uint1 block[blocksize]);
+
         static void decode(uint4 output[], const uint1 input[], size_type len);
+
         static void encode(uint1 output[], const uint4 input[], size_type len);
 
         bool finalized{};
@@ -53,13 +65,21 @@ namespace util {
 
         // low level logic operations
         static inline uint4 F(uint4 x, uint4 y, uint4 z);
+
         static inline uint4 G(uint4 x, uint4 y, uint4 z);
+
         static inline uint4 H(uint4 x, uint4 y, uint4 z);
+
         static inline uint4 I(uint4 x, uint4 y, uint4 z);
+
         static inline uint4 rotate_left(uint4 x, int n);
+
         static inline void FF(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+
         static inline void GG(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+
         static inline void HH(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+
         static inline void II(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
     };
 

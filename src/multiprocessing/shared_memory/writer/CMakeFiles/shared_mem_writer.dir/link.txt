@@ -1,0 +1,1 @@
+/usr/bin/c++  -g  -rdynamic CMakeFiles/shared_mem_writer.dir/writer.cpp.o  -o shared_mem_writer 

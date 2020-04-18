@@ -1,0 +1,3 @@
+/home/simon/git/note/src/multithreading/lock/spinlock/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/simon/git/note/src/multithreading/lock/spinlock/cmake-build-debug/CMakeFiles/spin.dir
+/home/simon/git/note/src/multithreading/lock/spinlock/cmake-build-debug/CMakeFiles/edit_cache.dir

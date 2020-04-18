@@ -6,4 +6,4 @@ project(test)
 
 aux_source_directory(. SRC_DIR)
 
-add_executable(main ${SRC_DIR} thread_poll.h)
+add_executable(main ${SRC_DIR})

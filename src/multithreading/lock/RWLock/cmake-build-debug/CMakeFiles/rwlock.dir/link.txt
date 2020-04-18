@@ -1,0 +1,1 @@
+/usr/bin/c++  -g  -rdynamic CMakeFiles/rwlock.dir/test_rwlcok.cpp.o  -o rwlock 

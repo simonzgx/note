@@ -1,0 +1,3 @@
+/home/simon/git/note/src/semaphore/producer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/simon/git/note/src/semaphore/producer/cmake-build-debug/CMakeFiles/main.dir
+/home/simon/git/note/src/semaphore/producer/cmake-build-debug/CMakeFiles/edit_cache.dir

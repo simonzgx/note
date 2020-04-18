@@ -1,0 +1,3 @@
+/home/simon/git/note/src/multithreading/lock/RWLock/CMakeFiles/edit_cache.dir
+/home/simon/git/note/src/multithreading/lock/RWLock/CMakeFiles/rebuild_cache.dir
+/home/simon/git/note/src/multithreading/lock/RWLock/CMakeFiles/rw_lock.dir
