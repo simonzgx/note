@@ -2,11 +2,10 @@
 // Created by Simon on 2020/1/23.
 //
 
-#ifndef MAIN_THREADPOOL_H
-#define MAIN_THREADPOOL_H
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
+#include <iostream>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -19,20 +18,26 @@
 
 
 using namespace std;
-class ThreadPool {
+
+class thread_poll {
 public:
 
-    static ThreadPool instance;
+    static thread_poll instance;
 
-    static ThreadPool& getInstance();
+    static thread_poll &getInstance();
 
     template<class F, class... Args>
     auto enqueue(F &&f, Args &&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
 
+    thread_poll &operator=(thread_poll const &) = delete;
+
+    thread_poll(thread_poll const &) = delete;
 
 private:
-    explicit ThreadPool(size_t=0);
-    ~ThreadPool();
+    explicit thread_poll(size_t= 0);
+
+    ~thread_poll();
+
     // need to keep track of threads so we can join them
     std::vector<std::thread> workers;
     // the task queue
@@ -44,10 +49,10 @@ private:
     bool stop;
 };
 
-ThreadPool ThreadPool::instance;
+thread_poll thread_poll::instance;
 
 // the constructor just launches some amount of workers
-inline ThreadPool::ThreadPool(size_t threads)
+inline thread_poll::thread_poll(size_t threads)
         : stop(false) {
     for (size_t i = 0; i < threads; ++i)
         workers.emplace_back(
@@ -73,7 +78,7 @@ inline ThreadPool::ThreadPool(size_t threads)
 
 // add new work item to the pool
 template<class F, class... Args>
-auto ThreadPool::enqueue(F &&f, Args &&... args)
+auto thread_poll::enqueue(F &&f, Args &&... args)
 -> std::future<typename std::result_of<F(Args...)>::type> {
     using return_type = typename std::result_of<F(Args...)>::type;
 
@@ -82,11 +87,11 @@ auto ThreadPool::enqueue(F &&f, Args &&... args)
     );
     std::future<return_type> res = task->get_future();
     {
-        std::unique_lock<std::mutex> lock(queue_mutex);
+        std::unique_lock<std::mutex> _lk(queue_mutex);
 
         // don't allow enqueueing after stopping the pool
         if (stop)
-            throw std::runtime_error("enqueue on stopped ThreadPool");
+            throw std::runtime_error("enqueue on stopped thread_poll");
 
         tasks.emplace([task]() { (*task)(); });
     }
@@ -95,21 +100,19 @@ auto ThreadPool::enqueue(F &&f, Args &&... args)
 }
 
 // the destructor joins all threads
-inline ThreadPool::~ThreadPool() {
+inline thread_poll::~thread_poll() {
     {
-        std::unique_lock<std::mutex> lock(queue_mutex);
+        std::unique_lock<std::mutex> _lk(queue_mutex);
         stop = true;
     }
     condition.notify_all();
     for (std::thread &worker: workers)
         worker.join();
-    std::cout<<"destructed"<<std::endl;
+    std::cout << "destructed" << std::endl;
 }
 
-ThreadPool& ThreadPool::getInstance() {
+thread_poll &thread_poll::getInstance() {
     return instance;
 }
 
 #endif
-
-#endif //MAIN_THREADPOOL_H

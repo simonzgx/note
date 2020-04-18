@@ -61,11 +61,11 @@ char *av_base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
 
     if (in_size >= UINT_MAX / 4 || out_size < AV_BASE64_SIZE(in_size))
      {
-         return NULL;
+         return nullptr;
      }
     ret = dst = out;
     while (bytes_remaining) {
-        i_bits = (i_bits << 8) + *in++;
+        i_bits = (i_bits << unsigned(8)) + *in++;
         bytes_remaining--;
         i_shift += 8;
 
@@ -86,7 +86,7 @@ string encodeBase64(const string &txt){
         return "";
     }
     int size = AV_BASE64_SIZE(txt.size()) + 10;
-    std::shared_ptr<char> txt_enc(new char[size],[](char *ptr){delete [] ptr;});
+    std::shared_ptr<char> txt_enc(new char[size],[](const char *ptr){delete [] ptr;});
     auto ret = av_base64_encode(txt_enc.get(),size,(uint8_t *)txt.data(),txt.size());
     if(!ret ){
         return "";
@@ -99,7 +99,7 @@ string decodeBase64(const string &txt){
         return "";
     }
     int size = txt.size() * 3 / 4 +10;
-    std::shared_ptr<char> txt_dec(new char[size],[](char *ptr){delete [] ptr;});
+    std::shared_ptr<char> txt_dec(new char[size],[](const char *ptr){delete [] ptr;});
     size = av_base64_decode((uint8_t *)txt_dec.get(),txt.data(),size);
     if(size <= 0){
         return "";

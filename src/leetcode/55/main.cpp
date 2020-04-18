@@ -34,4 +34,5 @@ int main() {
     Solution s;
     std::vector<int> nums{3,2,1,0,4};
     cout<<s.canJump(nums)<<endl;
+    cout<<(3<<2)<<endl;
 }

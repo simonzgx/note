@@ -332,7 +332,7 @@ namespace util {
 
 //////////////////////////////
 
-    std::string _md5(const std::string str)
+    std::string _md5(const std::string& str)
     {
         md5 _md5 = md5(str);
 
