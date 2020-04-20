@@ -6,9 +6,19 @@
 #include <queue>
 #include <unordered_map>
 #include <set>
-
+#include <algorithm>
 
 using namespace std;
+
+
+struct Element {
+    int index;
+    int value;
+
+    friend bool operator<(const Element &left, const Element &right) {
+        return left.value < right.value;
+    }
+};
 
 class Solution {
 public:
@@ -30,14 +40,34 @@ public:
             }
             if (!j && !i)break;
         }
-        int ans = n1 / cnt1 * cnt2/n2;
+        int ans = n1 / cnt1 * cnt2 / n2;
         if (n1 % cnt1 > min_match)ans++;
         return ans;
     }
+
+    vector<int> twoSum(vector<int> &nums, int target) {
+        vector<Element> _nums;
+        for(int i=0;i<nums.size();++i){
+            Element e{i, nums[i]};
+            _nums.emplace_back(e);
+        }
+        sort(_nums.begin(), _nums.end());
+        for (int i = 0; i < _nums.size(); ++i) {
+            for (int j = i + 1; j < nums.size(); ++j) {
+                if (_nums[i].value + _nums[j].value == target)return {_nums[i].index, _nums[j].index};
+            }
+        }
+        return {};
+    }
+
+
 };
 
 
 int main() {
     Solution s;
-    cout << s.getMaxRepetitions("bacab", 3, "abacab", 1) << endl;
+    vector<int> nums{3, 2, 4};
+    for (const auto &i : s.twoSum(nums, 6)) {
+        cout << i << endl;
+    }
 }
