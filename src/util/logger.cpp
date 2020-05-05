@@ -10,7 +10,8 @@ util::LogContext::LogContext(LogLevel level, const char *file, const char *funct
 }
 
 util::LogContextCapture::LogContextCapture(Logger &logger, LogLevel level, const char *file,
-                                           const char *function, int line) {
+                                           const char *function, int line) :
+        _logger(logger), _ctx(new LogContext(level, file, function, line)) {
 
 }
 
@@ -32,3 +33,6 @@ util::LogContextCapture &util::LogContextCapture::operator<<(std::ostream &(*f)(
     return *this;
 }
 
+void util::Logger::write(const LogContextPtr &ctx) {
+
+}

@@ -24,9 +24,9 @@ namespace util {
         LTrace = 0, Debug, Info, Warning, Error
     } LogLevel;
 
-    class Logger;
 
     class LogContext : public std::ostringstream {
+    public:
         LogContext(LogLevel level, const char *file,
                    const char *function,
                    int line
@@ -42,6 +42,15 @@ namespace util {
     };
 
     using LogContextPtr = std::shared_ptr<LogContext>;
+
+    class Writer{
+
+    };
+
+    class Logger : public std::enable_shared_from_this<Logger>, public noncopyable {
+    public:
+        void write(const LogContextPtr &ctx);
+    };
 
     class LogContextCapture {
     public:
@@ -60,11 +69,6 @@ namespace util {
     };
 
     using CapturePtr = std::shared_ptr<LogContextCapture>;
-
-    class Logger : public std::enable_shared_from_this<Logger>, public noncopyable {
-    public:
-//        friend class
-    };
 }
 
 
