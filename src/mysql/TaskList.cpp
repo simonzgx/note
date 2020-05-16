@@ -14,8 +14,8 @@ CTaskList::~CTaskList(void)
 		delete m_pTaskNode[i];
 	}
 }
-
-bool CTaskList::Push(IMysqlTask* poTask)
+IMysqlTask
+bool CTaskList::Push(* poTask)
 {
 
 	uint16_t usNextIndex = static_cast<uint16_t>((m_uWriteIndex + 1) % MAX_TASK_NUM);
