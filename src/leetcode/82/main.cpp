@@ -7,45 +7,42 @@
 
 using namespace std;
 
-struct ListNode {
-    int val;
-    ListNode *next;
+class Solution {
+public:
+    char toLowerCase(char c) {
+        static int diff = 'A' - 'a';
+        if (('a' <= c && c <= 'z') || ('0' <= c && c <='9')) {
+            return c;
+        }
+        if (('A' <= c && c <= 'Z')) {
+            return static_cast<char>(c - diff);
+        }
+        return '\0';
+    }
 
-    explicit ListNode(int x) : val(x), next(nullptr) {}
+    bool isPalindrome(string s) {
+        int left = 0, right = s.size() - 1;
+        while (left < right) {
+            char l, r;
+            do {
+                l = toLowerCase(s[left]);
+                left++;
+            } while (l == '\0' && left <= right);
+            do {
+                r = toLowerCase(s[right]);
+                right--;
+            } while (r == '\0' && left <= right + 1);
+            if (l != r) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
-ListNode *deleteDuplicates(ListNode *head) {
-    if (head == nullptr) return nullptr;
-    if (head->next == nullptr) return head;
-    ListNode *ret = new ListNode(-1), *cur = ret, *next = nullptr;
-    ret->next = head;
-    while (cur->next) {
-        next = cur->next;
-        while (next->next && next->next->val == next->val) {
-            next = next->next;
-        }
-        if (next != cur->next) cur->next = next->next;
-        else cur = cur->next;
-    }
-    return ret->next;
-}
-
 int main() {
-    auto *head = new ListNode(1);
-    ListNode *ret = head;
-    int valueArr[] = {1};
-    for (auto &i : valueArr) {
-        head->next = new ListNode(i);
-        head = head->next;
-    }
-
-    auto result = deleteDuplicates(ret);
-    while (true) {
-        if (result == nullptr)
-            return 0;
-        cout << result->val << endl;
-        result = result->next;
-    }
+    Solution s;
+    cout << s.isPalindrome("0P") << endl;
 }
 
 
