@@ -4,4 +4,4 @@ project(121)
 
 add_definitions(-std=c++14)
 
-add_executable(test main.cpp)
+add_executable(test main.cpp ../../util/ini_parser.h)
