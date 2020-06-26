@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/test_libevent.dir/main.cpp.o  -o test_libevent -rdynamic -llibevent 
