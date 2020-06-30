@@ -10,7 +10,6 @@
 using namespace std;
 
 
-
 struct ListNode {
     int val;
     ListNode *next;
@@ -20,50 +19,52 @@ struct ListNode {
 
 class Solution {
 public:
-
     ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
-        std::stack<int> v1,v2;
-        ListNode* n = l1;
-        while(n){
-            v1.push(n->val);
-            n = n->next;
+        ListNode vHead(0), *p = &vHead;
+        int flag = 0;
+        while (l1 || l2 || flag) {
+            int tmp = 0;
+            if (l1 != nullptr) tmp += l1->val;
+            if (l2 != nullptr) tmp += l2->val;
+            tmp += flag;
+
+            flag = tmp / 10;
+            tmp %= 10;
+
+            ListNode *next = l1 ? l1 : l2;
+            if (next == nullptr) next = new ListNode(tmp);
+            next->val = tmp;
+
+            p->next = next;
+            p = p->next;
+            l1 = l1 ? l1->next : nullptr;
+            l2 = l2 ? l2->next : nullptr;
         }
-        n = l2;
-        while (n){
-            v2.push(n->val);
-            n = n->next;
-        }
-        int carry_flag = 0;
-        ListNode* ans = nullptr;
-        ListNode* cur = ans;
-        while(!v1.empty() && !v2.empty()){
-            ListNode tmp((carry_flag + v1.top() + v2.top())%10);
-            *cur = tmp;
-            cur = cur->next;
-            carry_flag = (v1.top() + v2.top()) /10;
-            v1.pop();
-            v2.pop();
-        }
-        while(!v1.empty()){
-            ListNode tmp((carry_flag + v1.top())%10);
-            carry_flag = (carry_flag + v1.top())/10;
-            *cur = tmp;
-            cur=cur->next;
-            v1.pop();
-        }
-        while(!v2.empty()){
-            ListNode tmp((carry_flag + v2.top())%10);
-            *cur = tmp;
-            cur=cur->next;
-            carry_flag = (carry_flag + v2.top())/10;
-            v1.pop();
-        }
-        return ans;
+        return vHead.next;
     }
 };
 
-int main() {
+ListNode *VectorToList(const vector<int> &v) {
+    ListNode *ret, *cur;
+    ret = new ListNode(0);
+    cur = ret;
+    for (const auto &i:v) {
+        cur->next = new ListNode(i);
+        cur = cur->next;
+    }
+    return ret->next;
+}
 
+int main() {
+    ListNode *l1 = VectorToList({1,9});
+    ListNode *l2 = VectorToList({1,0});
+    Solution s;
+    ListNode *result = s.addTwoNumbers(l1, l2);
+    auto it = result;
+    while (it) {
+        cout << it->val << endl;
+        it = it->next;
+    }
 }
 
 
