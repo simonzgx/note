@@ -5,22 +5,17 @@
 #include <iostream>
 #include <vector>
 
-using namespace  std;
+using namespace std;
 
-int maxProfit(vector<int>& prices) {
-    int l = prices.size();
-    if (l <= 1)return 0;
-    int minPrice = prices.at(0);
-    int ret = 0,diff;
-    for(int i=1;i<l;++i){
-        diff = prices[i] - minPrice;
-        if (diff < 0)minPrice = prices[i];
-        else if (diff > ret) ret = diff;
+class Solution {
+public:
+    int maxProfit(const vector<int> &prices) {
+        if (prices.empty())return 0;
+
     }
-    return ret;
-}
+};
 
-int main(){
-    vector<int> prices{7,1,5,3,6,4};
-    cout<<maxProfit(prices)<<endl;
+int main() {
+    Solution s;
+    cout << s.maxProfit({3, 3, 5, 0, 0, 3, 1, 4});
 }
