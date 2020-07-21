@@ -36,7 +36,7 @@ namespace util {
 
     class Any {
     public:
-        using AnyPtr=std::shared_ptr<Any>;
+        using AnyPtr = std::shared_ptr<Any>;
 
         Any() = default;
 
@@ -79,11 +79,58 @@ namespace util {
         typedef std::shared_ptr<AnyStorage> Ptr;
     };
 
-    void makeRandStr(int sz, std::string& ret, bool printable = true);
+    //得到一个随机字符串
+    void MakeRandStr(int sz, std::string &ret, bool printable = true);
 
-    class util {
+    //以16进制的格式输出一块内存
+    void HexOutput(const char *buf, size_t len);
 
-    };
+    //获取当前进程可执行文件的绝对目录
+    std::string GetCurrentProcessExeDir();
+
+    /*
+     * DESCRIPTION:convert std::string to wide string
+     * Input: str 待转换的字符串
+     * Returns: utf8str
+     * Err: range_error
+     */
+    //convert std::string to wide string
+    std::wstring String2WideString(const std::string &str);
+
+    /*
+     * DESCRIPTION: 实现wide string 到string的转换
+     * Input: w_str,待转换的字符串;
+     * Returns: utf8str
+     * err:range_error
+     */
+    std::string WideString2String(const std::wstring &w_str);
+
+    /*
+     * DESCRIPTION: 实现由wstromg 到utf8的转码
+     * Input: src,待转换的字符串;
+     * Returns: utf8str
+     * err:range_error
+    */
+    std::string WideString2Utf8(const std::wstring &src);
+
+    /*
+     * DESCRIPTION: 实现由utf8编码到gbk编码的转换
+     * Input: gbkStr,转换后的字符串;
+     * srcStr,待转换的字符串;
+     * maxGbkStrlen, gbkStr的最大长度
+     * Output: gbkStr
+     * Returns: -1,fail;>0,success
+    */
+    int UTF82GBK(char *gbkStr, const char *srcStr, int maxGbkStrlen);
+
+    /*
+     * Description: 实现由gbk编码到utf8编码的转换
+     * Input: utfstr,转换后的字符串; srcstr,待转换的字符串; maxutfstrlen, utfstr的最大长度
+     * Output: utfstr
+     * Returns: -1,fail;>0,success
+    */
+    int GBK2UTF8(char *utfstr, const char *srcstr, int maxutfstrlen);
+
 }
 
 

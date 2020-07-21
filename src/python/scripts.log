@@ -1,0 +1,3 @@
+2020-07-16 16:24:53,479 - SampleLogger - INFO - abcd
+2020-07-16 16:25:24,915 - SampleLogger - INFO - abcd
+2020-07-16 16:25:24,916 - SampleLogger - WARNING - dddd

@@ -5,24 +5,35 @@
 #ifndef NET_UTIL_H
 #define NET_UTIL_H
 
-#include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/un.h>
 #include <ctime>
 #include <cstdio>
+#include <cerrno>
+#include <unistd.h>
+#include <cstdarg>
+
+#if defined(__MSVCRT__) || defined(_MSC_VER)
+
+#include <winsock2.h>
+
+#pragma comment (lib, "ws2_32.lib")
+#define addrinfo sockaddr_in
+#endif
+#ifdef linux
+#include <sys/un.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <cerrno>
-#include <unistd.h>
-#include <cstdarg>
+
+#endif
+
+namespace util {
 
 #define NET_OK 0
 #define NET_ERR -1
 #define NET_ERR_LEN 256
 
-namespace util{
     static void SetError(char *err, const char *fmt, ...);
 
     static int SetReuseAddr(char *err, int fd);
@@ -33,8 +44,6 @@ namespace util{
 
     static int TcpServer(char *err, int port, char *bindaddr, int af, int backlog);
 }
-
-
 
 
 #endif //NET_UTIL_H
