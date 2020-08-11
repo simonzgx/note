@@ -18,24 +18,29 @@
 #if defined(__MSVCRT__) || defined(_MSC_VER) || defined(WIN32)
 #endif
 
-#ifdef linux
+#if defined(__linux__)
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <fcntl.h>
+#include <netinet/tcp.h>
 
 #endif
 
 #ifdef apple
 #endif
 
-
-namespace net {
-
 #define NET_OK 0
 #define NET_ERR -1
 #define ERR_MSG_LEN 256
+#define LOCAL_HOST "127.0.0.1"
+
+#define ANET_NONE 0
+#define ANET_IP_ONLY (1<<0)
+
+namespace net {
 
     static void NetSetError(char *err, const char *fmt, ...) {
         va_list ap;
@@ -50,49 +55,36 @@ namespace net {
     public:
         explicit Socket(int af, int sock_type, int protocol);
 
+        static Socket* New(int domain, char *err_msg);
+
         virtual ~Socket();
 
-        virtual int Init(char *err_msg){};
+        int SetNonBlock(char *err_msg);
 
-        virtual int Read(char *buf, size_t buff_len){};
+        int SetBlock(char *err_msg, int non_block = 0);
 
-        virtual int Write(char *buf, size_t count){};
+        int SetReuseAddr(char *err_msg);
 
-        virtual int SetNonBlock(char *err_msg){};
+    private:
+        explicit Socket(int domain) : m_sfd(domain) {};
 
-        virtual int SetBlock(char *err_msg){};
-
-        virtual int SetReuseAddr(char *err_msg);
-
-        int m_fd{};
+    public:
+        int m_sfd{};
     };
 
     using SocketPTR = std::shared_ptr<Socket>;
 
-    class Server {
-    public:
-        Server() = default;
 
-        virtual int Listen(SocketPTR, char *err_msg) = 0;
-
-        virtual int Accept(char *err_msg) = 0;
-    };
-
-    class Client {
-        Client();
-
-        int Connect();
-    };
-
-
-    class TCPServer  {
+    class TCPServer {
 
     public:
-        TCPServer(int port, const char *bind_addr);
+        TCPServer(int port, const char *bind_addr=LOCAL_HOST);
 
-        int Listen(const struct addrinfo *addr,char *err_msg) ;
+        int SetKeepAlive(int fd, int interval, char *err_msg);
 
-        int Accept(char *err_msg) ;
+        int Listen(const struct addrinfo *addr, char *err_msg);
+
+        int Accept(char *err_msg);
 
     private:
         int m_port;
@@ -100,9 +92,16 @@ namespace net {
         SocketPTR m_socket;
     };
 
-    class TCPClient : public Client {
-        TCPClient();
-    };
+    int GenericResolve(char *err, char *host, char *ipbuf, size_t ipbuf_len,
+                       int flags);
+
+    int Resolve(char *err, char *host, char *ipbuf, size_t ipbuf_len);
+
+    int ResolveIP(char *err, char *host, char *ipbuf, size_t ipbuf_len);
+
+    int Read(int fd, char *buf, size_t count);
+
+    int Write(int fd, const char *buf, size_t count);
 }
 
 
