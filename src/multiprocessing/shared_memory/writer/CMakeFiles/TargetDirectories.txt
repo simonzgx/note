@@ -1,3 +1,0 @@
-/home/simon/git/note/src/shared_memory/writer/CMakeFiles/rebuild_cache.dir
-/home/simon/git/note/src/shared_memory/writer/CMakeFiles/shared_mem_writer.dir
-/home/simon/git/note/src/shared_memory/writer/CMakeFiles/edit_cache.dir

@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/rw_lock.dir/main.cpp.o  -o rw_lock -rdynamic -lpthread 

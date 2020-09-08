@@ -1,1 +1,0 @@
-/usr/bin/c++  -g  -rdynamic CMakeFiles/spin.dir/test.cpp.o  -o spin 

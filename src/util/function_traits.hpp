@@ -14,7 +14,7 @@ namespace util {
     template<typename T>
     struct function_traits;
 
-//普通函数
+    //普通函数
     template<typename Ret, typename... Args>
     struct function_traits<Ret(Args...)>
     {
@@ -33,15 +33,15 @@ namespace util {
         };
     };
 
-//函数指针
+    //函数指针
     template<typename Ret, typename... Args>
     struct function_traits<Ret(*)(Args...)> : function_traits<Ret(Args...)>{};
 
-//std::function
+    //std::function
     template <typename Ret, typename... Args>
     struct function_traits<std::function<Ret(Args...)>> : function_traits<Ret(Args...)>{};
 
-//member function
+    //member function
 #define FUNCTION_TRAITS(...) \
     template <typename ReturnType, typename ClassType, typename... Args>\
     struct function_traits<ReturnType(ClassType::*)(Args...) __VA_ARGS__> : function_traits<ReturnType(Args...)>{}; \
@@ -51,7 +51,7 @@ namespace util {
     FUNCTION_TRAITS(volatile)
     FUNCTION_TRAITS(const volatile)
 
-//函数对象
+    //函数对象
     template<typename Callable>
     struct function_traits : function_traits<decltype(&Callable::operator())>{};
 

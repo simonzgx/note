@@ -1,3 +1,0 @@
-/home/simon/git/note/src/semaphore/consumer/CMakeFiles/rebuild_cache.dir
-/home/simon/git/note/src/semaphore/consumer/CMakeFiles/edit_cache.dir
-/home/simon/git/note/src/semaphore/consumer/CMakeFiles/main.dir
