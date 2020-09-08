@@ -28,19 +28,19 @@ TcpClient::TcpClient(EventBase *loop,
           connector_(new Connector(loop, serverAddr)),
           name_(std::move(nameArg)),
           retry_(true),
-          connect_(true),
+          connect_(false),
           nextConnId_(1) {
     connector_->setNewConnectionCallback(
             [this](auto &&PH1) { newConnection(PH1); });
     //fixme : do something when connect failed
-    this->connector_->setConnectFailedCallback([this]() { LOG_ERROR << "Connect Failed!\n"; });
-    LOG_INFO << "TcpClient::TcpClient[" << this->name_
-             << "] - connector " << get_pointer(this->connector_);
+    this->connector_->setConnectFailedCallback([this]() {
+        LOG_ERROR("%s", "Connect Failed!");
+    });
+    LOG_INFO("TcpClient::TcpClient[%s] - connector", this->name_.c_str());
 }
 
 TcpClient::~TcpClient() {
-    LOG_INFO << "TcpClient::~TcpClient[" << this->name_
-             << "] - connector " << get_pointer(this->connector_);
+    LOG_INFO("TcpClient::~TcpClient[%s] - connector", this->name_.c_str());
     TcpConnectionPtr conn;
     bool unique = false;
     {
@@ -51,7 +51,9 @@ TcpClient::~TcpClient() {
     if (conn) {
         assert(this->loop_ == conn->getLoop());
         // FIXME: not 100% safe, if we are in different thread
-        CloseCallback cb = [this](auto &&PH1) { return ::removeConnection(this->loop_, PH1); };
+        CloseCallback cb = [this](auto &&PH1) {
+            return ::removeConnection(this->loop_, PH1);
+        };
         this->loop_->runInLoop(
                 [conn, cb] { conn->setCloseCallback(cb); });
         if (unique) {
@@ -66,10 +68,7 @@ TcpClient::~TcpClient() {
 
 
 void TcpClient::connect() {
-    // FIXME: check state
-    LOG_INFO << "TcpClient::connect[" << this->name_ << "] - connecting to "
-             << this->connector_->serverAddress().toIpPort();
-    this->connect_ = true;
+    LOG_INFO("TcpClient::connect[%s] - connecting to %s", this->name_.c_str(), this->connector_->serverAddress().toIpPort().c_str());
     this->connector_->start();
 }
 
@@ -115,13 +114,13 @@ void TcpClient::newConnection(int sockfd) {
     conn->setMessageCallback(this->messageCallback_);
     conn->setWriteCompleteCallback(this->writeCompleteCallback_);
     conn->setCloseCallback([this](auto &&PH1) {
-        LOG_INFO<<"conn closed!"<<std::endl;
         this->removeConnection(PH1);
     });
     {
         std::lock_guard<std::mutex> lock(this->mutex_);
         this->connection_ = conn;
     }
+    this->connect_ = true;
     conn->connectEstablished();
 }
 
@@ -137,8 +136,7 @@ void TcpClient::removeConnection(const TcpConnectionPtr &conn) {
 
     this->loop_->queueInLoop([conn] { conn->connectDestroyed(); });
     if (this->retry_ && this->connect_) {
-        LOG_INFO << "TcpClient::connect[" << name_ << "] - Reconnecting to "
-                 << connector_->serverAddress().toIpPort();
+        LOG_INFO("TcpClient::connect[%s] - Reconnecting to %s", this->name_.c_str(), this->connector_->serverAddress().toIpPort().c_str());
         this->connector_->restart();
     }
 }

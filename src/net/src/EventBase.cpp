@@ -27,7 +27,7 @@ namespace {
     int createEventfd() {
         int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
         if (evtfd < 0) {
-            LOG_SYSERR << "Failed in eventfd";
+            LOG_SYSERR ("%s", "Failed in eventfd");
             abort();
         }
         return evtfd;
@@ -64,10 +64,9 @@ EventBase::EventBase()
           wakeupFd_(createEventfd()),
           wakeupChannel_(new Channel(this, wakeupFd_)),
           currentActiveChannel_(nullptr) {
-    LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
+    LOG_DEBUG ("EventLoop created in thread %d", threadId_);
     if (t_loopInThisThread) {
-        LOG_FATAL << "Another EventLoop " << t_loopInThisThread
-                  << " exists in this thread " << threadId_;
+        LOG_SYSFATAL("Another EventLoop exists in this thread %d", threadId_);
     } else {
         t_loopInThisThread = this;
     }
@@ -79,8 +78,7 @@ EventBase::EventBase()
 
 
 EventBase::~EventBase() {
-    LOG_DEBUG << "EventLoop " << this << " of thread " << threadId_
-              << " destructs in thread " << CurrentThread::tid();
+    LOG_DEBUG ("EventLoop of thread %d  destructs in thread %d ", threadId_, CurrentThread::tid());
     wakeupChannel_->disableAll();
     wakeupChannel_->remove();
     ::close(wakeupFd_);
@@ -92,7 +90,7 @@ void EventBase::loop() {
     assertInLoopThread();
     looping_ = true;
     quit_ = false;  // FIXME: what if someone calls quit() before loop() ?
-    LOG_TRACE << "EventLoop " << this << " start looping";
+    LOG_TRACE ("%s", "EventLoop start looping ");
 
     while (!quit_) {
         activeChannels_.clear();
@@ -112,8 +110,7 @@ void EventBase::loop() {
         eventHandling_ = false;
         doPendingFunctors();
     }
-
-    LOG_TRACE << "EventLoop " << this << " stop looping";
+    LOG_TRACE ("%s", "EventLoop stop looping ");
     looping_ = false;
 }
 
@@ -128,7 +125,6 @@ void EventBase::quit() {
 }
 
 void EventBase::runInLoop(const Functor &cb) {
-    LOG_INFO << "runInLoop" << std::endl;
     if (isInLoopThread()) {
         cb();
     } else {
@@ -156,12 +152,12 @@ TimerId EventBase::runAt(Timestamp time, const TimerCallback &cb) {
     return timerQueue_->addTimer(cb, time, 0.0);
 }
 
-TimerId EventBase::runAfter(double delay, const TimerCallback& cb) {
+TimerId EventBase::runAfter(double delay, const TimerCallback &cb) {
     Timestamp time(addTime(Timestamp::now(), delay));
     return runAt(time, cb);
 }
 
-TimerId EventBase::runEvery(double interval, const TimerCallback& cb) {
+TimerId EventBase::runEvery(double interval, const TimerCallback &cb) {
     Timestamp time(addTime(Timestamp::now(), interval));
     return timerQueue_->addTimer(cb, time, interval);
 }
@@ -193,16 +189,15 @@ bool EventBase::hasChannel(Channel *channel) {
 }
 
 void EventBase::abortNotInLoopThread() {
-    LOG_FATAL << "EventLoop::abortNotInLoopThread - EventLoop " << this
-              << " was created in threadId_ = " << threadId_
-              << ", current thread id = " << CurrentThread::tid();
+    LOG_SYSFATAL ("EventLoop::abortNotInLoopThread - EventLoop was created in threadId_ = %d, current thread id = %d",
+                  threadId_, CurrentThread::tid());
 }
 
 void EventBase::wakeup() const {
     uint64_t one = 1;
     ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);
     if (n != sizeof one) {
-        LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
+        LOG_TRACE ("EventLoop::wakeup() writes %zd  bytes instead of 8", n);
     }
 }
 
@@ -210,7 +205,7 @@ void EventBase::handleRead() const {
     uint64_t one = 1;
     ssize_t n = sockets::read(wakeupFd_, &one, sizeof one);
     if (n != sizeof one) {
-        LOG_ERROR << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
+        LOG_ERROR ("EventLoop::handleRead() reads %zd  bytes instead of 8", n);
     }
 }
 

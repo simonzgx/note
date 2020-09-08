@@ -84,7 +84,7 @@ bool Address::resolve(const string &hostname, Address *out) {
         return true;
     } else {
         if (ret) {
-            LOG_SYSERR << "Address::resolve";
+            LOG_SYSERR("%s", "Address::resolve");
         }
         return false;
     }

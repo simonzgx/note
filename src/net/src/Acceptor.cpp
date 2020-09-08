@@ -37,7 +37,7 @@ Acceptor::~Acceptor() {
 }
 
 void Acceptor::listen() {
-    LOG_INFO << "Acceptor::listen\n";
+    LOG_INFO("%s", "Acceptor::listen\n");
     loop_->assertInLoopThread();
     listenning_ = true;
     acceptSocket_.listen();
@@ -58,7 +58,7 @@ void Acceptor::handleRead() {
             sockets::close(connfd);
         }
     } else {
-        LOG_SYSERR << "in Acceptor::handleRead";
+        LOG_SYSERR("%s", "in Acceptor::handleRead");
         // Read the section named "The special problem of
         // accept()ing when you can't" in libev's doc.
         // By Marc Lehmann, author of libev.

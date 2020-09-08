@@ -32,22 +32,19 @@ TcpConnection::TcpConnection(EventBase *loop,
           peerAddr_(peerAddr),
           highWaterMark_(64 * 1024 * 1024) {
     channel_->setReadCallback(
-            [this](auto && PH1) { handleRead(PH1); });
+            [this](auto &&PH1) { handleRead(PH1); });
     channel_->setWriteCallback(
             [this] { handleWrite(); });
     channel_->setCloseCallback(
             [this] { handleClose(); });
     channel_->setErrorCallback(
             [this] { handleError(); });
-    LOG_DEBUG << "TcpConnection::ctor[" << name_ << "] at " << this
-              << " fd=" << sockfd;
+    LOG_DEBUG("TcpConnection::ctor[%s] fd= %d ", name_.c_str(), sockfd);
     socket_->setKeepAlive(true);
 }
 
 TcpConnection::~TcpConnection() {
-    LOG_DEBUG << "TcpConnection::dtor[" << name_ << "] at " << this
-              << " fd=" << channel_->fd()
-              << " state=" << stateToString();
+    LOG_DEBUG("TcpConnection::dtor[[%s] fd= %d state=%s", name_.c_str(), channel_->fd(), stateToString());
     assert(state_ == kDisconnected);
 }
 
@@ -73,9 +70,7 @@ void TcpConnection::send(const string &message) {
         } else {
             void (TcpConnection::*fp)(const string &message) = &TcpConnection::sendInLoop;
             loop_->runInLoop(
-                    std::bind(fp,
-                              this,     // FIXME
-                              message));
+                    std::bind(fp, this, message));
         }
     }
 }
@@ -107,7 +102,7 @@ void TcpConnection::sendInLoop(const void *data, size_t len) {
     size_t remaining = len;
     bool faultError = false;
     if (state_ == kDisconnected) {
-        LOG_WARN << "disconnected, give up writing";
+        LOG_WARN("%s", "disconnected, give up writing");
         return;
     }
     // if no thing in output queue, try writing directly
@@ -122,7 +117,7 @@ void TcpConnection::sendInLoop(const void *data, size_t len) {
         {
             nwrote = 0;
             if (errno != EWOULDBLOCK) {
-                LOG_SYSERR << "TcpConnection::sendInLoop";
+                LOG_SYSERR("%s", "TcpConnection::sendInLoop");
                 if (errno == EPIPE || errno == ECONNRESET) // FIXME: any others?
                 {
                     faultError = true;
@@ -254,7 +249,7 @@ void TcpConnection::handleRead(Timestamp receiveTime) {
         handleClose();
     } else {
         errno = savedErrno;
-        LOG_SYSERR << "TcpConnection::handleRead";
+        LOG_SYSERR("%s", "TcpConnection::handleRead");
         handleError();
     }
 }
@@ -277,21 +272,20 @@ void TcpConnection::handleWrite() {
                 }
             }
         } else {
-            LOG_SYSERR << "TcpConnection::handleWrite";
+            LOG_SYSERR("%s", "TcpConnection::handleWrite");
             // if (state_ == kDisconnecting)
             // {
             //   shutdownInLoop();
             // }
         }
     } else {
-        LOG_TRACE << "Connection fd = " << channel_->fd()
-                  << " is down, no more writing";
+        LOG_TRACE("Connection fd = %d is down, no more writing", channel_->fd());
     }
 }
 
 void TcpConnection::handleClose() {
     loop_->assertInLoopThread();
-    LOG_TRACE << "fd = " << channel_->fd() << " state = " << stateToString();
+    LOG_TRACE("fd = %d state = %s", channel_->fd(),stateToString());
     assert(state_ == kConnected || state_ == kDisconnecting);
     // we don't close fd, leave it to dtor, so we can find leaks easily.
     setState(kDisconnected);
@@ -305,8 +299,7 @@ void TcpConnection::handleClose() {
 
 void TcpConnection::handleError() {
     int err = sockets::getSocketError(channel_->fd());
-    LOG_ERROR << "TcpConnection::handleError [" << name_
-              << "] - SO_ERROR = " << err << " " << gai_strerror(err);
+    LOG_ERROR("TcpConnection::handleError [%s] - SO_ERROR = %d %s", name_.c_str(), err, gai_strerror(err));
 }
 
 

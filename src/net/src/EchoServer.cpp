@@ -23,9 +23,9 @@ EchoServer::EchoServer(EventBase *loop,
                        const Address &listenAddr)
         : server_(loop, listenAddr, "EchoServer") {
     server_.setConnectionCallback(
-            std::bind(&EchoServer::onConnection, this, _1));
+            [this](auto &&PH1) { onConnection(PH1); });
     server_.setMessageCallback(
-            std::bind(&EchoServer::onMessage, this, _1, _2, _3));
+            [this](auto &&PH1, auto &&PH2, auto &&PH3) { onMessage(PH1, PH2, PH3); });
 }
 
 void EchoServer::start() {
@@ -33,16 +33,14 @@ void EchoServer::start() {
 }
 
 void EchoServer::onConnection(const TcpConnectionPtr &conn) {
-    LOG_INFO << "EchoServer - " << conn->peerAddress().toIpPort() << " -> "
-             << conn->localAddress().toIpPort() << " is "
-             << (conn->connected() ? "UP" : "DOWN");
+    LOG_INFO("EchoServer - %s -> %s is %s", conn->peerAddress().toIpPort().c_str(),
+             conn->localAddress().toIpPort().c_str(), (conn->connected() ? "UP" : "DOWN"));
 }
 
 void EchoServer::onMessage(const TcpConnectionPtr &conn,
                            Buffer *buf,
                            Timestamp time) {
     std::string msg(buf->retrieveAllAsString());
-    LOG_INFO << conn->name() << " echo " << msg.size() << " bytes, "
-             << "data received at " << time.toString();
+    LOG_INFO("%s echo %lu bytes, data received at %s ", conn->name().c_str(), msg.size(), time.toString().c_str());
     conn->send(msg);
 }

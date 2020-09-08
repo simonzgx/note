@@ -24,11 +24,11 @@ Connector::Connector(EventBase *loop, const Address &serverAddr)
           connect_(false),
           state_(kDisconnected),
           retryDelayMs_(kInitRetryDelayMs) {
-    LOG_DEBUG << "ctor[" << this << "]";
+    LOG_DEBUG ("%s", "ctor Connector");
 }
 
 Connector::~Connector() {
-    LOG_DEBUG << "dtor[" << this << "]";
+    LOG_DEBUG ("%s", "dtor Connector");
     assert(!channel_);
 }
 
@@ -43,7 +43,7 @@ void Connector::startInLoop() {
     if (connect_) {
         connect();
     } else {
-        LOG_DEBUG << "do not connect";
+        LOG_DEBUG("%s", "do not connect");
     }
 }
 
@@ -89,12 +89,12 @@ void Connector::connect() {
         case EBADF:
         case EFAULT:
         case ENOTSOCK:
-            LOG_SYSERR << "connect error in Connector::startInLoop " << savedErrno;
+            LOG_SYSERR ("%s %d", "connect error in Connector::startInLoop ", savedErrno);
             sockets::close(sockfd);
             break;
 
         default:
-            LOG_SYSERR << "Unexpected error in Connector::startInLoop " << savedErrno;
+            LOG_SYSERR ("%s %d", "Unexpected error in Connector::startInLoop ", savedErrno);
             sockets::close(sockfd);
             // connectErrorCallback_();
             break;
@@ -137,17 +137,16 @@ void Connector::resetChannel() {
 }
 
 void Connector::handleWrite() {
-    LOG_TRACE << "Connector::handleWrite " << state_;
+    LOG_TRACE("Connector::handleWrite %d", state_);
 
     if (state_ == kConnecting) {
         int sockfd = removeAndResetChannel();
         int err = sockets::getSocketError(sockfd);
         if (err) {
-            LOG_WARN << "Connector::handleWrite - SO_ERROR = "
-                     << err << " " << gai_strerror(err);
+            LOG_WARN("Connector::handleWrite - SO_ERROR = %d %s", err, gai_strerror(err));
             retry(sockfd);
         } else if (sockets::isSelfConnect(sockfd)) {
-            LOG_WARN << "Connector::handleWrite - Self connect";
+            LOG_WARN("Connector::handleWrite - Self connect %d", state_);
             retry(sockfd);
         } else {
             setState(kConnected);
@@ -164,11 +163,11 @@ void Connector::handleWrite() {
 }
 
 void Connector::handleError() {
-    LOG_ERROR << "Connector::handleError state=" << state_;
+    LOG_ERROR("Connector::handleError state= %d", state_);
     if (state_ == kConnecting) {
         int sockfd = removeAndResetChannel();
         int err = sockets::getSocketError(sockfd);
-        LOG_TRACE << "SO_ERROR = " << err << " " << gai_strerror(err);
+        LOG_ERROR("SO_ERROR = %d %s", err, gai_strerror(err));
         retry(sockfd);
     }
 }
@@ -177,13 +176,12 @@ void Connector::retry(int sockfd) {
     sockets::close(sockfd);
     setState(kDisconnected);
     if (connect_) {
-        LOG_INFO << "Connector::retry - Retry connecting to " << serverAddr_.toIpPort()
-                 << " in " << retryDelayMs_ << " milliseconds. ";
+        LOG_ERROR("Connector::retry - Retry connecting to %s in %d milliseconds.", serverAddr_.toIpPort().c_str(), retryDelayMs_);
         ev_base->runAfter(retryDelayMs_ / 1000.0,
-                        std::bind(&Connector::startInLoop, shared_from_this()));
+                          [capture0 = shared_from_this()] { capture0->startInLoop(); });
         retryDelayMs_ = std::min(retryDelayMs_ * 2, kMaxRetryDelayMs);
     } else {
-        LOG_DEBUG << "do not connect";
+        LOG_DEBUG("%s", "do not connect");
     }
 }
 

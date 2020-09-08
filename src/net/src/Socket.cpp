@@ -91,17 +91,16 @@ void Socket::setReusePort(bool on) {
     int ret = ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEPORT,
                            &optval, static_cast<socklen_t>(sizeof optval));
     if (ret < 0 && on) {
-        LOG_SYSERR << "SO_REUSEPORT failed.";
+        LOG_SYSERR("%s", "SO_REUSEPORT failed.");
     }
 #else
-    if (on)
-    {
+    if (on) {
         LOG_ERROR << "SO_REUSEPORT is not supported.";
     }
 #endif
 }
 
-void Socket::setKeepAlive(bool on) {
+void Socket::setKeepAlive(bool on) const {
     int optval = on ? 1 : 0;
     if (::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval))) {
         perror("ERROR: setsocketopt(), SO_KEEPIDLE");

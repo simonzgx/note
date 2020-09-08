@@ -9,24 +9,23 @@ using namespace net;
 #define MEM_ZERO(ptr, size) memset(ptr, 0, size);
 
 AtomicInt64 Timer::s_numCreated_;
+
 int createTimerfd() {
     int timerfd = ::timerfd_create(CLOCK_MONOTONIC,
                                    TFD_NONBLOCK | TFD_CLOEXEC);
     if (timerfd < 0) {
-        LOG_SYSFATAL << "Failed in timerfd_create";
+        LOG_SYSFATAL("%s","Failed in timerfd_create");
     }
     return timerfd;
 }
 
-struct timespec howMuchTimeFromNow(Timestamp when)
-{
+struct timespec howMuchTimeFromNow(Timestamp when) {
     int64_t microseconds = when.microSecondsSinceEpoch()
                            - Timestamp::now().microSecondsSinceEpoch();
-    if (microseconds < 100)
-    {
+    if (microseconds < 100) {
         microseconds = 100;
     }
-    struct timespec ts;
+    struct timespec ts{};
     ts.tv_sec = static_cast<time_t>(
             microseconds / Timestamp::kMicroSecondsPerSecond);
     ts.tv_nsec = static_cast<long>(
@@ -43,7 +42,7 @@ void resetTimerfd(int timerfd, Timestamp expiration) {
     newValue.it_value = howMuchTimeFromNow(expiration);
     int ret = ::timerfd_settime(timerfd, 0, &newValue, &oldValue);
     if (ret) {
-        LOG_SYSERR << "timerfd_settime()";
+        LOG_SYSFATAL("%s","timerfd_settime()");
     }
 }
 
@@ -55,14 +54,12 @@ void Timer::restart(Timestamp now) {
     }
 }
 
-void readTimerfd(int timerfd, Timestamp now)
-{
+void readTimerfd(int timerfd, Timestamp now) {
     uint64_t howmany;
     ssize_t n = ::read(timerfd, &howmany, sizeof howmany);
-    LOG_TRACE << "TimerQueue::handleRead() " << howmany << " at " << now.toString();
-    if (n != sizeof howmany)
-    {
-        LOG_ERROR << "TimerQueue::handleRead() reads " << n << " bytes instead of 8";
+    LOG_TRACE("TimerQueue::handleRead() %lu at %s",howmany, now.toString().c_str());
+    if (n != sizeof howmany) {
+        LOG_ERROR("TimerQueue::handleRead() reads  %lu bytes instead of 8",n);
     }
 }
 
@@ -88,18 +85,18 @@ TimerQueue::~TimerQueue() {
     }
 }
 
-TimerId TimerQueue::addTimer(const TimerCallback& cb,
+TimerId TimerQueue::addTimer(const TimerCallback &cb,
                              Timestamp when,
                              double interval) {
     auto *timer = new Timer(cb, when, interval);
     loop_->runInLoop(
-            std::bind(&TimerQueue::addTimerInLoop, this, timer));
+            [this, timer] { addTimerInLoop(timer); });
     return {timer, timer->sequence()};
 }
 
 void TimerQueue::cancel(TimerId timerId) {
     loop_->runInLoop(
-            std::bind(&TimerQueue::cancelInLoop, this, timerId));
+            [this, timerId] { cancelInLoop(timerId); });
 }
 
 void TimerQueue::addTimerInLoop(Timer *timer) {
@@ -115,7 +112,7 @@ void TimerQueue::cancelInLoop(TimerId timerId) {
     loop_->assertInLoopThread();
     assert(timers_.size() == activeTimers_.size());
     ActiveTimer timer(timerId.timer_, timerId.sequence_);
-    ActiveTimerSet::iterator it = activeTimers_.find(timer);
+    auto it = activeTimers_.find(timer);
     if (it != activeTimers_.end()) {
         size_t n = timers_.erase(Entry(it->first->expiration(), it->first));
         assert(n == 1);
@@ -150,7 +147,7 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now) {
     assert(timers_.size() == activeTimers_.size());
     std::vector<Entry> expired;
     Entry sentry(now, reinterpret_cast<Timer *>(UINTPTR_MAX));
-    TimerList::iterator end = timers_.lower_bound(sentry);
+    auto end = timers_.lower_bound(sentry);
     assert(end == timers_.end() || now < end->first);
     std::copy(timers_.begin(), end, back_inserter(expired));
     timers_.erase(timers_.begin(), end);
@@ -195,7 +192,7 @@ bool TimerQueue::insert(Timer *timer) {
     assert(timers_.size() == activeTimers_.size());
     bool earliestChanged = false;
     Timestamp when = timer->expiration();
-    TimerList::iterator it = timers_.begin();
+    auto it = timers_.begin();
     if (it == timers_.end() || when < it->first) {
         earliestChanged = true;
     }

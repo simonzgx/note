@@ -60,7 +60,7 @@ namespace net {
         ///
         /// Enable/disable SO_KEEPALIVE
         ///
-        void setKeepAlive(bool on);
+        void setKeepAlive(bool on) const;
 
     private:
         const int sockfd_;
