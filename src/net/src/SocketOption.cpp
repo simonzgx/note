@@ -2,8 +2,15 @@
 // Created by Administrator on 2020/8/19.
 //
 
+#ifdef WIN32
+#include <ws2tcpip.h>
+#include <Winsock.h>
+#include <winsock2.h>
+#define sa_family_t sockaddr
+#elif define(linux)
 #include <sys/uio.h>  // readv
 #include <unistd.h>
+#endif
 
 #include "SocketOption.h"
 #include "End.h"
@@ -15,25 +22,35 @@ using namespace net::sockets;
 namespace {
 
     typedef struct sockaddr SA;
-
-
+#ifdef linux
 #if VALGRIND || defined (NO_ACCEPT4)
-    void setNonBlockAndCloseOnExec(int sockfd)
-{
-  // non-block
-  int flags = ::fcntl(sockfd, F_GETFL, 0);
-  flags |= O_NONBLOCK;
-  int ret = ::fcntl(sockfd, F_SETFL, flags);
-  // FIXME check
+    void setNonBlockAndCloseOnExec(int sockfd){
+      // non-block
+      int flags = ::fcntl(sockfd, F_GETFL, 0);
+      flags |= O_NONBLOCK;
+      int ret = ::fcntl(sockfd, F_SETFL, flags);
+      // FIXME check
 
-  // close-on-exec
-  flags = ::fcntl(sockfd, F_GETFD, 0);
-  flags |= FD_CLOEXEC;
-  ret = ::fcntl(sockfd, F_SETFD, flags);
-  // FIXME check
+      // close-on-exec
+      flags = ::fcntl(sockfd, F_GETFD, 0);
+      flags |= FD_CLOEXEC;
+      ret = ::fcntl(sockfd, F_SETFD, flags);
+      // FIXME check
 
-  (void)ret;
-}
+      (void)ret;
+    }
+#endif
+#else
+
+    void setNonBlockAndCloseOnExec(int sockfd) {
+        unsigned long on_windows = 1;
+        if (ioctlsocket(sockfd, FIONBIO, &on_windows) < 0) {
+            LOG_SYSFATAL("%s", "set socket nonblocking failed!");
+            return;
+        }
+        closesocket(sockfd);
+    }
+
 #endif
 
 }  // namespace
@@ -60,11 +77,12 @@ const struct sockaddr_in6 *sockets::sockaddr_in6_cast(const struct sockaddr *add
 }
 
 int sockets::createNonblockingOrDie(sa_family_t family) {
+#ifdef linux
 #if VALGRIND
     int sockfd = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd < 0)
   {
-    LOG_SYSFATAL << "sockets::createNonblockingOrDie";
+    LOG_SYSFATAL("%s", "sockets::createNonblockingOrDie");
   }
 
   setNonBlockAndCloseOnExec(sockfd);
@@ -73,6 +91,13 @@ int sockets::createNonblockingOrDie(sa_family_t family) {
     if (sockfd < 0) {
         LOG_SYSFATAL("%s", "sockets::createNonblockingOrDie");
     }
+#endif
+#else
+    int sockfd = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
+    if (sockfd < 0) {
+        LOG_SYSFATAL("%s", "sockets::createNonblockingOrDie");
+    }
+    setNonBlockAndCloseOnExec(sockfd);
 #endif
     return sockfd;
 }
@@ -97,6 +122,7 @@ void sockets::listenOrDie(int sockfd) {
 
 int sockets::accept(int sockfd, struct sockaddr_in6 *addr) {
     auto addrlen = static_cast<socklen_t>(sizeof *addr);
+#ifdef linux
 #if VALGRIND || defined (NO_ACCEPT4)
     int connfd = ::accept(sockfd, sockaddr_cast(addr), &addrlen);
     setNonBlockAndCloseOnExec(connfd);
@@ -133,6 +159,15 @@ int sockets::accept(int sockfd, struct sockaddr_in6 *addr) {
         }
     }
     return connfd;
+#else
+    int connfd = ::accept(sockfd, nullptr, nullptr);
+    if(connfd == INVALID_SOCKET) {
+        LOG_SYSFATAL("%s%d", "accept error! retcode:", connfd);
+        closesocket(connfd);
+        return -1;
+    }
+    return connfd;
+#endif
 }
 
 int sockets::connect(int sockfd, const struct sockaddr *addr) {
@@ -152,9 +187,15 @@ ssize_t sockets::write(int sockfd, const void *buf, size_t count) {
 }
 
 void sockets::close(int sockfd) {
+#ifdef linux
     if (::close(sockfd) < 0) {
         LOG_SYSERR("%s", "sockets::close");
     }
+#else
+    if(::closesocket(sockfd) < 0){
+        LOG_SYSERR("%s", "sockets::close");
+    }
+#endif
 }
 
 void sockets::shutdownWrite(int sockfd) {

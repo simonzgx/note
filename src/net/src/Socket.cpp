@@ -3,14 +3,21 @@
 //
 
 #include <cstring>
+#include <cstdio>
+
+#ifdef WIN32
+#include <Winsock.h>
+#include <Ws2tcpip.h>
+#elif defined(linux)
+#include <netinet/tcp.h>
+#endif
 
 #include "Address.h"
 #include "Socket.h"
 #include "logger.h"
 #include "SocketOption.h"
 
-#include <netinet/tcp.h>
-#include <cstdio>
+
 
 using namespace net;
 
@@ -20,6 +27,9 @@ Socket::~Socket() {
 }
 
 bool Socket::getTcpInfoString(char *buf, int len) const {
+#ifdef WIN32
+    return true;
+#elif defined(linux)
     struct tcp_info tcpi{};
     bool ok = getTcpInfo(&tcpi);
     if (ok) {
@@ -41,12 +51,17 @@ bool Socket::getTcpInfoString(char *buf, int len) const {
                  tcpi.tcpi_total_retrans);  // Total retransmits for entire connection
     }
     return ok;
+#endif
 }
 
 bool Socket::getTcpInfo(struct tcp_info *tcpi) const {
+#ifdef WIN32
+    return true;
+#elif defined(linux)
     socklen_t len = sizeof(*tcpi);
     memset(tcpi, '\0', len);
     return ::getsockopt(sockfd_, SOL_TCP, TCP_INFO, tcpi, &len) == 0;
+#endif
 }
 
 void Socket::bindAddress(const Address &addr) {

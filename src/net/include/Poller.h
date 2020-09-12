@@ -22,7 +22,7 @@ namespace net {
     public:
         typedef std::vector<Channel *> ChannelList;
 
-        Poller(EventBase *loop);
+        explicit Poller(EventBase *loop);
 
         virtual ~Poller();
 

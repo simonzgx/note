@@ -5,14 +5,22 @@
 
 #include <cassert>
 #include <cerrno>
+
+#ifdef WIN32
+
+#elif define(linux)
+#include <unistd.h>
 #include <poll.h>
 #include <sys/epoll.h>
-#include <unistd.h>
+#endif
+
 
 #include "EPoll.h"
 #include "logger.h"
 #include "Channel.h"
 
+
+#ifdef linux
 // On Linux, the constants of poll(2) and epoll(4)
 // are expected to be the same.
 static_assert(EPOLLIN == POLLIN, "epoll uses same flag values as poll");
@@ -21,6 +29,8 @@ static_assert(EPOLLOUT == POLLOUT, "epoll uses same flag values as poll");
 static_assert(EPOLLRDHUP == POLLRDHUP, "epoll uses same flag values as poll");
 static_assert(EPOLLERR == POLLERR, "epoll uses same flag values as poll");
 static_assert(EPOLLHUP == POLLHUP, "epoll uses same flag values as poll");
+#endif // linux
+
 
 namespace {
     const int kNew = -1;
@@ -29,6 +39,8 @@ namespace {
 }
 
 using namespace net;
+
+#ifdef linux
 
 EPoll::EPoll(EventBase *loop)
         : Poller(loop),
@@ -166,3 +178,5 @@ const char *EPoll::operationToString(int op) {
             return "Unknown Operation";
     }
 }
+
+#endif // linux

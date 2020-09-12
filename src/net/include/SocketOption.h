@@ -5,12 +5,18 @@
 #ifndef NET_SOCKETOPTION_H
 #define NET_SOCKETOPTION_H
 
-#include <string.h>
+#include <cstring>
 #include <cassert>
-
 #include <cstdint>
 #include <sys/types.h>
+
+#ifdef WIN32
+#include <Winsock.h>
+#include <winsock2.h>
+#define sa_family_t int
+#elif defined (linux)
 #include <arpa/inet.h>
+#endif
 
 #include "logger.h"
 
