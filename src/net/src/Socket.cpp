@@ -6,7 +6,7 @@
 #include <cstdio>
 
 #ifdef WIN32
-#include <Winsock.h>
+#include <winsock2.h>
 #include <Ws2tcpip.h>
 #elif defined(linux)
 #include <netinet/tcp.h>
@@ -18,9 +18,27 @@
 #include "SocketOption.h"
 
 
-
 using namespace net;
 
+
+namespace {
+    class WINSock {
+    public:
+        explicit WINSock() {
+            WSADATA wsaData = {0};
+            if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+                fprintf(stderr, "WSAStartup failed! return code:%d", WSAGetLastError());
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        ~WINSock() {
+            ::WSACleanup();
+        }
+    };
+}
+
+static ::WINSock winSock;
 
 Socket::~Socket() {
     sockets::close(sockfd_);
@@ -89,37 +107,52 @@ void Socket::shutdownWrite() {
 void Socket::setTcpNoDelay(bool on) {
     int optval = on ? 1 : 0;
     ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY,
-                 &optval, static_cast<socklen_t>(sizeof optval));
+                 reinterpret_cast<const char*>(&optval), static_cast<socklen_t>(sizeof optval));
     // FIXME CHECK
 }
 
 void Socket::setReuseAddr(bool on) {
     int optval = on ? 1 : 0;
+#ifdef linux
     ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR,
                  &optval, static_cast<socklen_t>(sizeof optval));
     // FIXME CHECK
+#elif defined(WIN32)
+    ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR,
+                 reinterpret_cast<const char*>(&optval), static_cast<socklen_t>(sizeof optval));
+    // FIXME CHECK
+#endif
 }
 
 void Socket::setReusePort(bool on) {
 #ifdef SO_REUSEPORT
-    int optval = on ? 1 : 0;
+#ifdef linux
+        int optval = on ? 1 : 0;
     int ret = ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEPORT,
                            &optval, static_cast<socklen_t>(sizeof optval));
     if (ret < 0 && on) {
         LOG_SYSERR("%s", "SO_REUSEPORT failed.");
     }
+#endif
 #else
     if (on) {
-        LOG_ERROR << "SO_REUSEPORT is not supported.";
+        LOG_ERROR("%s", "SO_REUSEPORT is not supported.");
     }
 #endif
+
 }
 
 void Socket::setKeepAlive(bool on) const {
     int optval = on ? 1 : 0;
+#ifdef linux
     if (::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval))) {
         perror("ERROR: setsocketopt(), SO_KEEPIDLE");
     }
+#elif defined(WIN32)
+    if (::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&optval), static_cast<socklen_t>(sizeof optval))) {
+        perror("ERROR: setsocketopt(), SO_KEEPIDLE");
+    }
+#endif
 
     optval = 3;
     if (::setsockopt(sockfd_, SOL_TCP, TCP_KEEPIDLE, &optval, static_cast<socklen_t>(sizeof optval))) {
