@@ -6,14 +6,14 @@
 #include <cassert>
 #include <cerrno>
 
-#ifdef WIN32
+#include "platform.h"
+#ifdef __WINDOWS__
 
-#elif define(linux)
+#elif defined(linux)
 #include <unistd.h>
 #include <poll.h>
 #include <sys/epoll.h>
 #endif
-
 
 #include "EPoll.h"
 #include "logger.h"

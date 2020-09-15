@@ -179,7 +179,7 @@ namespace net {
         /// Append int64_t using network endian
         ///
         void appendInt64(int64_t x) {
-            int64_t be64 = sockets::hostToNetwork64(x,isBigEndian_);
+            int64_t be64 = sockets::hostToNetwork64(x, isBigEndian_);
             append(&be64, sizeof be64);
         }
 
@@ -187,12 +187,12 @@ namespace net {
         /// Append int32_t using network endian
         ///
         void appendInt32(int32_t x) {
-            int32_t be32 = sockets::hostToNetwork32(x,isBigEndian_);
+            int32_t be32 = sockets::hostToNetwork32(x, isBigEndian_);
             append(&be32, sizeof be32);
         }
 
         void appendInt16(int16_t x) {
-            int16_t be16 = sockets::hostToNetwork16(x,isBigEndian_);
+            int16_t be16 = sockets::hostToNetwork16(x, isBigEndian_);
             append(&be16, sizeof be16);
         }
 
@@ -257,7 +257,7 @@ namespace net {
             size_t needed = sizeof(ElementType) * size;
             check_read(needed);
             container.resize(size);
-            read_buffer((char *) &container[0], needed);
+            read_buffer(reinterpret_cast<char *>(&container[0]), needed);
             return *this;
         }
 
@@ -269,7 +269,7 @@ namespace net {
             assert(readableBytes() >= sizeof(int64_t));
             int64_t be64 = 0;
             memcpy(&be64, peek(), sizeof be64);
-            return sockets::networkToHost64(be64,isBigEndian_);
+            return sockets::networkToHost64(be64, isBigEndian_);
         }
 
         ///
@@ -280,7 +280,7 @@ namespace net {
             assert(readableBytes() >= sizeof(int32_t));
             int32_t be32 = 0;
             ::memcpy(&be32, peek(), sizeof be32);
-            return sockets::networkToHost32(be32,isBigEndian_);
+            return sockets::networkToHost32(be32, isBigEndian_);
         }
 
         int16_t peekInt16() const {
@@ -301,14 +301,14 @@ namespace net {
             assert(readableBytes() >= sizeof(T));
             T tValue{};
             ::memcpy(&tValue, peek(), sizeof(T));
-            return sockets::networkToHost16(tValue,isBigEndian_);
+            return sockets::networkToHost16(tValue, isBigEndian_);
         }
 
         ///
         /// Prepend int64_t using network endian
         ///
         void prependInt64(int64_t x) {
-            int64_t be64 = sockets::hostToNetwork64(x,isBigEndian_);
+            int64_t be64 = sockets::hostToNetwork64(x, isBigEndian_);
             prepend(&be64, sizeof be64);
         }
 
@@ -316,12 +316,12 @@ namespace net {
         /// Prepend int32_t using network endian
         ///
         void prependInt32(int32_t x) {
-            int32_t be32 = sockets::hostToNetwork32(x,isBigEndian_);
+            int32_t be32 = sockets::hostToNetwork32(x, isBigEndian_);
             prepend(&be32, sizeof be32);
         }
 
         void prependInt16(int16_t x) {
-            int16_t be16 = sockets::hostToNetwork16(x,isBigEndian_);
+            int16_t be16 = sockets::hostToNetwork16(x, isBigEndian_);
             prepend(&be16, sizeof be16);
         }
 

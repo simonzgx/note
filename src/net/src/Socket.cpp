@@ -5,22 +5,24 @@
 #include <cstring>
 #include <cstdio>
 
-#ifdef WIN32
+#include "Address.h"
+#include "Socket.h"
+#include "logger.h"
+#include "SocketOption.h"
+
+#ifdef __WINDOWS__
+#include <winsock.h>
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #elif defined(linux)
 #include <netinet/tcp.h>
 #endif
 
-#include "Address.h"
-#include "Socket.h"
-#include "logger.h"
-#include "SocketOption.h"
 
 
 using namespace net;
 
-
+#ifdef __WINDOWS__
 namespace {
     class WINSock {
     public:
@@ -39,13 +41,15 @@ namespace {
 }
 
 static ::WINSock winSock;
+#endif
 
 Socket::~Socket() {
     sockets::close(sockfd_);
 }
 
 bool Socket::getTcpInfoString(char *buf, int len) const {
-#ifdef WIN32
+#ifdef __WINDOWS__
+    //fixme
     return true;
 #elif defined(linux)
     struct tcp_info tcpi{};
@@ -73,7 +77,8 @@ bool Socket::getTcpInfoString(char *buf, int len) const {
 }
 
 bool Socket::getTcpInfo(struct tcp_info *tcpi) const {
-#ifdef WIN32
+#ifdef __WINDOWS__
+    //fixme
     return true;
 #elif defined(linux)
     socklen_t len = sizeof(*tcpi);
@@ -92,7 +97,6 @@ void Socket::listen() {
 
 int Socket::accept(Address *peeraddr) {
     struct sockaddr_in6 addr{};
-//    memset(&addr, '\0', sizeof addr);
     int connfd = sockets::accept(sockfd_, &addr);
     if (connfd >= 0) {
         peeraddr->setSockAddrInet6(addr);
@@ -106,8 +110,13 @@ void Socket::shutdownWrite() {
 
 void Socket::setTcpNoDelay(bool on) {
     int optval = on ? 1 : 0;
+#ifdef linux
+    ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY,
+                &optval, static_cast<socklen_t>(sizeof optval));
+#elif defined(__WINDOWS__)
     ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY,
                  reinterpret_cast<const char*>(&optval), static_cast<socklen_t>(sizeof optval));
+#endif
     // FIXME CHECK
 }
 
@@ -117,7 +126,7 @@ void Socket::setReuseAddr(bool on) {
     ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR,
                  &optval, static_cast<socklen_t>(sizeof optval));
     // FIXME CHECK
-#elif defined(WIN32)
+#elif defined(__WINDOWS__)
     ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR,
                  reinterpret_cast<const char*>(&optval), static_cast<socklen_t>(sizeof optval));
     // FIXME CHECK
@@ -148,15 +157,15 @@ void Socket::setKeepAlive(bool on) const {
     if (::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval))) {
         perror("ERROR: setsocketopt(), SO_KEEPIDLE");
     }
-#elif defined(WIN32)
+    optval = 3;
+    if (::setsockopt(sockfd_, IPPROTO_TCP, TCP_KEEPIDLE, &optval, static_cast<socklen_t>(sizeof optval))) {
+        perror("ERROR: setsocketopt(), TCP_KEEPIDLE");
+    }
+    //fixme check after set
+#elif defined(__WINDOWS__)
     if (::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&optval), static_cast<socklen_t>(sizeof optval))) {
         perror("ERROR: setsocketopt(), SO_KEEPIDLE");
     }
 #endif
-
-    optval = 3;
-    if (::setsockopt(sockfd_, SOL_TCP, TCP_KEEPIDLE, &optval, static_cast<socklen_t>(sizeof optval))) {
-        perror("ERROR: setsocketopt(), TCP_KEEPIDLE");
-    }
 
 }

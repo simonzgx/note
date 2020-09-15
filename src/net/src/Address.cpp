@@ -5,12 +5,6 @@
 #include "Address.h"
 #include "End.h"
 
-// INADDR_ANY use (type)value casting.
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-static const in_addr_t kInaddrAny = INADDR_ANY;
-static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
-#pragma GCC diagnostic error "-Wold-style-cast"
-
 using namespace net;
 using string = std::string;
 

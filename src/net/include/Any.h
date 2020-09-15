@@ -19,7 +19,7 @@ namespace net {
         template<typename C, typename ...ArgsType>
         void set(ArgsType &&...args) {
             _data.reset(new C(std::forward<ArgsType>(args)...), [](void *ptr) {
-                delete (C *) ptr;
+                delete reinterpret_cast<C *>(ptr);
             });
         }
 

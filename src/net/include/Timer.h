@@ -14,7 +14,6 @@
 #include <atomic>
 
 #include <unistd.h>
-#include <sys/timerfd.h>
 
 #include "noncopyable.h"
 #include "Timestamp.h"
@@ -22,13 +21,23 @@
 #include "Callbacks.h"
 #include "Channel.h"
 #include "EventBase.h"
+#include "platform.h"
+
+#ifdef linux
+#include <sys/timerfd.h>
+#elif defined(__WINDOWS__)
+#include <windows.h>
+#include <queue>
+#include <map>
+#define ID_TIMER 0
+#endif
 
 namespace net {
-
     using AtomicInt32 = std::atomic<int32_t>;
     using AtomicInt64 = std::atomic<int64_t>;
 
     class Timer : public noncopyable {
+
     public:
         Timer(TimerCallback cb, Timestamp when, double interval)
                 : callback_(std::move(cb)),
@@ -38,7 +47,10 @@ namespace net {
                   sequence_(s_numCreated_++) {}
 
         void run() const {
+#ifdef linux
             callback_();
+#elif defined(__WINDOWS__)
+#endif
         }
 
         Timestamp expiration() const { return expiration_; }
@@ -61,6 +73,12 @@ namespace net {
         static AtomicInt64 s_numCreated_;
     };
 
+    using TimerPtr = std::shared_ptr<Timer>;
+
+}
+
+namespace net {
+
     class TimerId {
 
         friend class TimerQueue;
@@ -75,13 +93,23 @@ namespace net {
                   sequence_(seq) {
         }
 
+#ifdef __WINDOWS__
+
+        friend bool operator<(const TimerId &lh, const TimerId &rh) {
+            if (lh.timer_->expiration() < rh.timer_->expiration()) {
+                return true;
+            }
+            return false;
+        }
+
+#endif
     private:
         Timer *timer_;
         int64_t sequence_;
     };
 
+
     class TimerQueue {
-        using TimerCallback = std::function<void()>;
     public:
         explicit TimerQueue(EventBase *loop);
 
@@ -100,13 +128,14 @@ namespace net {
 
     private:
 
-        // FIXME: use unique_ptr<Timer> instead of raw pointers.
-        // This requires heterogeneous comparison lookup (N3465) from C++14
-        // so that we can find an T* in a set<unique_ptr<T>>.
-        typedef std::pair<Timestamp, Timer *> Entry;
-        typedef std::set<Entry> TimerList;
-        typedef std::pair<Timer *, int64_t> ActiveTimer;
-        typedef std::set<ActiveTimer> ActiveTimerSet;
+        using Entry = std::pair<Timestamp, TimerPtr>;
+        using TimerList = std::set<Entry>;
+#ifdef linux
+        using ActiveTimer = std::pair<TimerPtr, int64_t>;
+        using ActiveTimerList = std::set<ActiveTimer>;
+#elif defined(__WINDOWS__)
+        using ActiveTimerList = std::priority_queue<Timer>;
+#endif
 
         void addTimerInLoop(Timer *timer);
 
@@ -120,7 +149,7 @@ namespace net {
 
         void reset(const std::vector<Entry> &expired, Timestamp now);
 
-        bool insert(Timer *timer);
+        bool insert(const TimerPtr&);
 
         EventBase *loop_;
         const int timerfd_;
@@ -129,9 +158,9 @@ namespace net {
         TimerList timers_;
 
         // for cancel()
-        ActiveTimerSet activeTimers_;
-        bool callingExpiredTimers_; /* atomic */
-        ActiveTimerSet cancelingTimers_;
+        ActiveTimerList activeTimers_;
+        std::atomic_bool callingExpiredTimers_; /* atomic */
+        ActiveTimerList cancelingTimers_;
     };
 
 }

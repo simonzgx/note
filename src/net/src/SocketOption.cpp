@@ -2,18 +2,17 @@
 // Created by Administrator on 2020/8/19.
 //
 
-#ifdef WIN32
+#include "SocketOption.h"
+#include "End.h"
+
+#ifdef __WINDOWS__
 #include <ws2tcpip.h>
 #include <Winsock.h>
 #include <winsock2.h>
-#define sa_family_t sockaddr
-#elif define(linux)
+#elif defined(linux)
 #include <sys/uio.h>  // readv
 #include <unistd.h>
 #endif
-
-#include "SocketOption.h"
-#include "End.h"
 
 using namespace net;
 using namespace net::sockets;
@@ -40,7 +39,7 @@ namespace {
       (void)ret;
     }
 #endif
-#else
+#elif defined(__WINDOWS__)
 
     void setNonBlockAndCloseOnExec(int sockfd) {
         unsigned long on_windows = 1;
@@ -161,7 +160,7 @@ int sockets::accept(int sockfd, struct sockaddr_in6 *addr) {
     return connfd;
 #else
     int connfd = ::accept(sockfd, nullptr, nullptr);
-    if(connfd == INVALID_SOCKET) {
+    if (connfd == INVALID_SOCKET) {
         LOG_SYSFATAL("%s%d", "accept error! retcode:", connfd);
         closesocket(connfd);
         return -1;
@@ -175,15 +174,27 @@ int sockets::connect(int sockfd, const struct sockaddr *addr) {
 }
 
 ssize_t sockets::read(int sockfd, void *buf, size_t count) {
+#ifdef linux
     return ::read(sockfd, buf, count);
+#elif defined(__WINDOWS__)
+
+#endif
 }
 
 ssize_t sockets::readv(int sockfd, const struct iovec *iov, int iovcnt) {
+#ifdef linux
     return ::readv(sockfd, iov, iovcnt);
+#elif defined(__WINDOWS__)
+
+#endif
 }
 
 ssize_t sockets::write(int sockfd, const void *buf, size_t count) {
+#ifdef linux
     return ::write(sockfd, buf, count);
+#elif defined(__WINDOWS__)
+
+#endif
 }
 
 void sockets::close(int sockfd) {
@@ -192,16 +203,22 @@ void sockets::close(int sockfd) {
         LOG_SYSERR("%s", "sockets::close");
     }
 #else
-    if(::closesocket(sockfd) < 0){
+    if (::closesocket(sockfd) < 0) {
         LOG_SYSERR("%s", "sockets::close");
     }
 #endif
 }
 
 void sockets::shutdownWrite(int sockfd) {
+#ifdef linux
     if (::shutdown(sockfd, SHUT_WR) < 0) {
         LOG_SYSERR("%s", "sockets::shutdownWrite");
     }
+#elif defined(__WINDOWS__)
+    if (::shutdown(sockfd, SD_SEND) != 0) {
+        LOG_SYSERR("%s%D", "sockets::shutdownWrite error. error code :", WSAGetLastError());
+    }
+#endif
 }
 
 void sockets::toIpPort(char *buf, size_t size,
@@ -216,6 +233,7 @@ void sockets::toIpPort(char *buf, size_t size,
 
 void sockets::toIp(char *buf, size_t size,
                    const struct sockaddr *addr) {
+#ifdef linux
     if (addr->sa_family == AF_INET) {
         assert(size >= INET_ADDRSTRLEN);
         const struct sockaddr_in *addr4 = sockaddr_in_cast(addr);
@@ -225,35 +243,47 @@ void sockets::toIp(char *buf, size_t size,
         const struct sockaddr_in6 *addr6 = sockaddr_in6_cast(addr);
         ::inet_ntop(AF_INET6, &addr6->sin6_addr, buf, static_cast<socklen_t>(size));
     }
+#elif defined(__WINDOWS__)
+
+#endif
 }
 
 void sockets::fromIpPort(const char *ip, uint16_t port,
                          struct sockaddr_in *addr) {
+#ifdef linux
     addr->sin_family = AF_INET;
     addr->sin_port = hostToNetwork16(port);
     if (::inet_pton(AF_INET, ip, &addr->sin_addr) <= 0) {
         LOG_SYSERR("%s", "sockets::fromIpPort");
     }
+#elif defined(__WINDOWS__)
+
+#endif
 }
 
 void sockets::fromIpPort(const char *ip, uint16_t port,
                          struct sockaddr_in6 *addr) {
+#ifdef linux
     addr->sin6_family = AF_INET6;
     addr->sin6_port = hostToNetwork16(port);
     if (::inet_pton(AF_INET6, ip, &addr->sin6_addr) <= 0) {
         LOG_SYSERR("%s", "sockets::fromIpPort");
     }
+#elif defined(__WINDOWS__)
+#endif
 }
 
 int sockets::getSocketError(int sockfd) {
     int optval;
     auto optlen = static_cast<socklen_t>(sizeof optval);
-
+#ifdef linux
     if (::getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
         return errno;
     } else {
         return optval;
     }
+#elif defined(__WINDOWS__)
+#endif
 }
 
 struct sockaddr_in6 sockets::getLocalAddr(int sockfd) {

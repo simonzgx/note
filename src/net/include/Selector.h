@@ -6,16 +6,20 @@
 #define NET_SELECTOR_H
 
 #include "Poller.h"
+#include "platform.h"
 
-#ifdef WIN32
+#ifdef __WINDOWS__
 namespace net{
     class Selector :public Poller{
         explicit Selector(EventBase* ev);
+
         ~Selector() override;
+
         Timestamp poll(int timeoutMs, ChannelList* activeChannels) override;
-        void updateChannel(Channel* channel);
 
+        void updateChannel(Channel* channel) override;
 
+        void removeChannel(Channel *channel)override;
 
     };
 }

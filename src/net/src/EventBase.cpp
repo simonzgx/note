@@ -7,7 +7,6 @@
 #include <cassert>
 #include <csignal>
 #include <unistd.h>
-#include <sys/eventfd.h>
 
 #include "Timer.h"
 #include "Channel.h"
@@ -16,6 +15,12 @@
 #include "Poller.h"
 #include "CurrentThread.h"
 #include "SocketOption.h"
+#include "platform.h"
+
+#ifdef linux
+#include <sys/eventfd.h>
+#elif defined(__WINDOWS__)
+#endif
 
 using namespace net;
 

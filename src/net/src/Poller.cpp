@@ -7,7 +7,9 @@
 #include "EventBase.h"
 #include "Channel.h"
 #include "EPoll.h"
+#include "Selector.h"
 
+#include "platform.h"
 
 using namespace net;
 
@@ -25,6 +27,10 @@ bool Poller::hasChannel(Channel *channel) const {
 }
 
 Poller *Poller::newDefaultPoller(EventBase *loop) {
+#ifdef linux
     return new EPoll(loop);
+#elif defined(__WINDOWS__)
+    return new Selector(loop);
+#endif
 }
 

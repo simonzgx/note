@@ -9,9 +9,24 @@
 #include <cstdint>
 #include <string>
 #include <cstring>
-#include <netdb.h>
 
 #include "SocketOption.h"
+
+#ifdef linux
+#include <netdb.h>
+
+// INADDR_ANY use (type)value casting.
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+static const in_addr_t kInaddrAny = INADDR_ANY;
+static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
+#pragma GCC diagnostic error "-Wold-style-cast"
+
+#elif defined(__WINDOWS__)
+#include <inaddr.h>
+// INADDR_ANY use (type)value casting.
+static in_addr kInaddrAny;
+kInaddrAny.S_un = 0;
+#endif
 
 namespace net {
     class Address {

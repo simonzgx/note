@@ -6,6 +6,7 @@
 #define NET_SOCKET_H
 
 #include "noncopyable.h"
+#include "platform.h"
 
 struct tcp_info;
 

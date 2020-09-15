@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "Timestamp.h"
-
+#include "platform.h"
 // should really belong to base/Types.h, but <memory> is not included there.
 
 template<typename T>

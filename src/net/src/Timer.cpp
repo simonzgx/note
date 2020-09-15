@@ -10,15 +10,6 @@ using namespace net;
 
 AtomicInt64 Timer::s_numCreated_;
 
-int createTimerfd() {
-    int timerfd = ::timerfd_create(CLOCK_MONOTONIC,
-                                   TFD_NONBLOCK | TFD_CLOEXEC);
-    if (timerfd < 0) {
-        LOG_SYSFATAL("%s","Failed in timerfd_create");
-    }
-    return timerfd;
-}
-
 struct timespec howMuchTimeFromNow(Timestamp when) {
     int64_t microseconds = when.microSecondsSinceEpoch()
                            - Timestamp::now().microSecondsSinceEpoch();
@@ -33,7 +24,22 @@ struct timespec howMuchTimeFromNow(Timestamp when) {
     return ts;
 }
 
-void resetTimerfd(int timerfd, Timestamp expiration) {
+inline int createTimerfd() {
+#ifdef linux
+    int timerfd = ::timerfd_create(CLOCK_MONOTONIC,
+                                   TFD_NONBLOCK | TFD_CLOEXEC);
+    if (timerfd < 0) {
+        LOG_SYSFATAL("%s", "Failed in timerfd_create");
+    }
+    return timerfd;
+#elif defined(__WINDOWS__)
+    static int timerfd = 0;
+    return timerfd++;
+#endif
+}
+
+inline void resetTimerfd(int timerfd, Timestamp expiration) {
+#ifdef linux
     // wake up loop by timerfd_settime()
     struct itimerspec newValue{};
     struct itimerspec oldValue{};
@@ -42,8 +48,12 @@ void resetTimerfd(int timerfd, Timestamp expiration) {
     newValue.it_value = howMuchTimeFromNow(expiration);
     int ret = ::timerfd_settime(timerfd, 0, &newValue, &oldValue);
     if (ret) {
-        LOG_SYSFATAL("%s","timerfd_settime()");
+        LOG_SYSFATAL("%s", "timerfd_settime()");
     }
+#elif defined(__WINDOWS__)
+    (void) timerfd;
+    (void) expiration;
+#endif
 }
 
 void Timer::restart(Timestamp now) {
@@ -57,9 +67,9 @@ void Timer::restart(Timestamp now) {
 void readTimerfd(int timerfd, Timestamp now) {
     uint64_t howmany;
     ssize_t n = ::read(timerfd, &howmany, sizeof howmany);
-    LOG_TRACE("TimerQueue::handleRead() %lu at %s",howmany, now.toString().c_str());
+    LOG_TRACE("TimerQueue::handleRead() %lu at %s", howmany, now.toString().c_str());
     if (n != sizeof howmany) {
-        LOG_ERROR("TimerQueue::handleRead() reads  %lu bytes instead of 8",n);
+        LOG_ERROR("TimerQueue::handleRead() reads  %lu bytes instead of 8", n);
     }
 }
 
@@ -69,10 +79,14 @@ TimerQueue::TimerQueue(EventBase *loop)
           timerfdChannel_(loop, timerfd_),
           timers_(),
           callingExpiredTimers_(false) {
-    timerfdChannel_.setReadCallback(
-            std::bind(&TimerQueue::handleRead, this));
+    timerfdChannel_.setReadCallback([this](Timestamp) -> void {
+        this->handleRead();
+    });
+#ifdef linux
     // we are always reading the timerfd, we disarm it with timerfd_settime.
+    // add timer fd into poller
     timerfdChannel_.enableReading();
+#endif
 }
 
 TimerQueue::~TimerQueue() {
@@ -80,9 +94,9 @@ TimerQueue::~TimerQueue() {
     timerfdChannel_.remove();
     ::close(timerfd_);
     // do not remove channel, since we're in EventLoop::dtor();
-    for (const Entry &timer : timers_) {
-        delete timer.second;
-    }
+//    for (Entry &timer : timers_) {
+//        timer.second = nullptr;
+//    }
 }
 
 TimerId TimerQueue::addTimer(const TimerCallback &cb,
@@ -101,7 +115,8 @@ void TimerQueue::cancel(TimerId timerId) {
 
 void TimerQueue::addTimerInLoop(Timer *timer) {
     loop_->assertInLoopThread();
-    bool earliestChanged = insert(timer);
+    TimerPtr t(timer);
+    bool earliestChanged = this->insert(t);
 
     if (earliestChanged) {
         resetTimerfd(timerfd_, timer->expiration());
@@ -117,7 +132,6 @@ void TimerQueue::cancelInLoop(TimerId timerId) {
         size_t n = timers_.erase(Entry(it->first->expiration(), it->first));
         assert(n == 1);
         (void) n;
-        delete it->first; // FIXME: no delete please
         activeTimers_.erase(it);
     } else if (callingExpiredTimers_) {
         cancelingTimers_.insert(timer);
@@ -173,8 +187,8 @@ void TimerQueue::reset(const std::vector<Entry> &expired, Timestamp now) {
             it.second->restart(now);
             insert(it.second);
         } else {
-            // FIXME move to a free list
-            delete it.second; // FIXME: no delete please
+//            // FIXME move to a free list
+//            delete it.second; // FIXME: no delete please
         }
     }
 
@@ -187,7 +201,7 @@ void TimerQueue::reset(const std::vector<Entry> &expired, Timestamp now) {
     }
 }
 
-bool TimerQueue::insert(Timer *timer) {
+bool TimerQueue::insert(const TimerPtr &timer) {
     loop_->assertInLoopThread();
     assert(timers_.size() == activeTimers_.size());
     bool earliestChanged = false;
@@ -203,7 +217,7 @@ bool TimerQueue::insert(Timer *timer) {
         (void) result;
     }
     {
-        std::pair<ActiveTimerSet::iterator, bool> result
+        std::pair<ActiveTimerList::iterator, bool> result
                 = activeTimers_.insert(ActiveTimer(timer, timer->sequence()));
         assert(result.second);
         (void) result;

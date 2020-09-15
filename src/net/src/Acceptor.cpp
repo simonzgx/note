@@ -14,6 +14,10 @@
 #include "EventBase.h"
 #include "Address.h"
 
+#ifdef WIN32
+#define O_CLOEXEC 0xffff
+#endif
+
 using namespace net;
 
 Acceptor::Acceptor(EventBase *loop, const Address &listenAddr, bool reuseport)
@@ -64,7 +68,7 @@ void Acceptor::handleRead() {
         // By Marc Lehmann, author of libev.
         if (errno == EMFILE) {
             ::close(idleFd_);
-            idleFd_ = ::accept(acceptSocket_.fd(), NULL, NULL);
+            idleFd_ = ::accept(acceptSocket_.fd(), nullptr, nullptr);
             ::close(idleFd_);
             idleFd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
         }

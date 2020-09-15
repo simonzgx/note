@@ -6,7 +6,9 @@
 #define NET_END_H
 
 #include <cstdint>
-#include <endian.h>
+
+#include "portable_endian.h"
+
 
 namespace net {
     namespace sockets {
