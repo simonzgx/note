@@ -134,7 +134,7 @@ namespace net {
         using ActiveTimer = std::pair<TimerPtr, int64_t>;
         using ActiveTimerList = std::set<ActiveTimer>;
 #elif defined(__WINDOWS__)
-        using ActiveTimerList = std::priority_queue<Timer>;
+        using ActiveTimerList = std::map<TimerId, Timer>;
 #endif
 
         void addTimerInLoop(Timer *timer);

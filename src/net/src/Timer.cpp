@@ -124,6 +124,7 @@ void TimerQueue::addTimerInLoop(Timer *timer) {
 }
 
 void TimerQueue::cancelInLoop(TimerId timerId) {
+#ifdef linux
     loop_->assertInLoopThread();
     assert(timers_.size() == activeTimers_.size());
     ActiveTimer timer(timerId.timer_, timerId.sequence_);
@@ -137,6 +138,8 @@ void TimerQueue::cancelInLoop(TimerId timerId) {
         cancelingTimers_.insert(timer);
     }
     assert(timers_.size() == activeTimers_.size());
+#elif defined(__WINDOWS__)
+#endif
 }
 
 void TimerQueue::handleRead() {
@@ -158,6 +161,7 @@ void TimerQueue::handleRead() {
 }
 
 std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now) {
+#ifdef linux
     assert(timers_.size() == activeTimers_.size());
     std::vector<Entry> expired;
     Entry sentry(now, reinterpret_cast<Timer *>(UINTPTR_MAX));
@@ -174,21 +178,20 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now) {
     }
 
     assert(timers_.size() == activeTimers_.size());
+#elif defined(__WINDOWS__)
+    std::vector<Entry> expired;
+#endif
     return expired;
 }
 
 void TimerQueue::reset(const std::vector<Entry> &expired, Timestamp now) {
     Timestamp nextExpire;
-
     for (const Entry &it : expired) {
         ActiveTimer timer(it.second, it.second->sequence());
         if (it.second->repeat()
             && cancelingTimers_.find(timer) == cancelingTimers_.end()) {
             it.second->restart(now);
             insert(it.second);
-        } else {
-//            // FIXME move to a free list
-//            delete it.second; // FIXME: no delete please
         }
     }
 
