@@ -5,6 +5,14 @@
 #include "Address.h"
 #include "End.h"
 
+#ifdef linux
+// INADDR_ANY use (type)value casting.
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+static const in_addr_t kInaddrAny = INADDR_ANY;
+static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
+#pragma GCC diagnostic error "-Wold-style-cast"
+#endif
+
 using namespace net;
 using string = std::string;
 
@@ -17,6 +25,7 @@ static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
 static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
 
 Address::Address(uint16_t port, bool loopbackOnly, bool ipv6) {
+#ifdef linux
     static_assert(offsetof(Address, addr6_) == 0, "addr6_ offset 0");
     static_assert(offsetof(Address, addr_) == 0, "addr_ offset 0");
     if (ipv6) {
@@ -32,6 +41,8 @@ Address::Address(uint16_t port, bool loopbackOnly, bool ipv6) {
         addr_.sin_addr.s_addr = sockets::hostToNetwork32(ip);
         addr_.sin_port = sockets::hostToNetwork16(port);
     }
+#elif defined(__WINDOWS__)
+#endif
 }
 
 Address::Address(const string &ip, uint16_t port, bool ipv6) {
@@ -70,7 +81,7 @@ bool Address::resolve(const string &hostname, Address *out) {
     struct hostent hent{};
     struct hostent *he = nullptr;
     int herrno = 0;
-
+#ifdef linux
     int ret = gethostbyname_r(hostname.c_str(), &hent, t_resolveBuffer, sizeof t_resolveBuffer, &he, &herrno);
     if (ret == 0 && he != nullptr) {
         assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
@@ -82,6 +93,8 @@ bool Address::resolve(const string &hostname, Address *out) {
         }
         return false;
     }
+#elif defined(__WINDOWS__)
+#endif
 }
 
 void Address::setScopeId(uint32_t scope_id) {

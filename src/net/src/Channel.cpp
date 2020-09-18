@@ -2,16 +2,26 @@
 // Created by Administrator on 2020/8/19.
 //
 
-#include <poll.h>
-
 #include "Channel.h"
 #include "logger.h"
+#include "platform.h"
+
+#ifdef linux
+#include <poll.h>
 
 using namespace net;
 
 const int Channel::kNoneEvent = 0;
 const int Channel::kReadEvent = POLLIN | POLLPRI;
 const int Channel::kWriteEvent = POLLOUT;
+#elif defined(__WINDOWS__)
+using namespace net;
+
+const int Channel::kNoneEvent = 0;
+const int Channel::kReadEvent = 0;
+const int Channel::kWriteEvent = 0;
+
+#endif
 
 
 Channel::Channel(EventBase *loop, int fd_)
@@ -65,6 +75,7 @@ void Channel::handleEvent(Timestamp receiveTime) {
 }
 
 void Channel::handleEventWithGuard(Timestamp receiveTime) {
+#ifdef linux
     eventHandling_ = true;
 //    LOG_TRACE << reventsToString();
     if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
@@ -88,6 +99,8 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
         if (writeCallback_) writeCallback_();
     }
     eventHandling_ = false;
+#elif defined(__WINDOWS__)
+#endif
 }
 
 Channel::string Channel::reventsToString() const {
@@ -99,6 +112,7 @@ Channel::string Channel::eventsToString() const {
 }
 
 Channel::string Channel::eventsToString(int fd, int ev) {
+#ifdef linux
     std::ostringstream oss;
     oss << fd << ": ";
     if (ev & POLLIN)
@@ -117,4 +131,6 @@ Channel::string Channel::eventsToString(int fd, int ev) {
         oss << "NVAL ";
 
     return oss.str();
+#elif defined(__WINDOWS__)
+#endif
 }

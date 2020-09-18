@@ -49,8 +49,6 @@ private:
     bool stop;
 };
 
-thread_poll thread_poll::instance;
-
 // the constructor just launches some amount of workers
 inline thread_poll::thread_poll(size_t threads)
         : stop(false) {
@@ -112,6 +110,7 @@ inline thread_poll::~thread_poll() {
 }
 
 thread_poll &thread_poll::getInstance() {
+    static thread_poll instance;
     return instance;
 }
 

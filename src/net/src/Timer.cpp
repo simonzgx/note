@@ -64,6 +64,10 @@ void Timer::restart(Timestamp now) {
     }
 }
 
+Timer::~Timer() {
+    std::cout << "destructor : " << this << std::endl;
+}
+
 void readTimerfd(int timerfd, Timestamp now) {
     uint64_t howmany;
     ssize_t n = ::read(timerfd, &howmany, sizeof howmany);
@@ -79,13 +83,37 @@ TimerQueue::TimerQueue(EventBase *loop)
           timerfdChannel_(loop, timerfd_),
           timers_(),
           callingExpiredTimers_(false) {
+
+#ifdef linux
     timerfdChannel_.setReadCallback([this](Timestamp) -> void {
         this->handleRead();
     });
-#ifdef linux
     // we are always reading the timerfd, we disarm it with timerfd_settime.
     // add timer fd into poller
     timerfdChannel_.enableReading();
+#elif defined(__WINDOWS__)
+    this->stop_ = false;
+    //fixme do not expose [this] in constructor
+    auto doLoop = [this]() -> void {
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (this->stop_)
+                break;
+            Timestamp now = Timestamp::now();
+            auto entries = this->getExpired(now);
+            for (auto &entry: entries) {
+                ThreadPool::instance().enqueue([entry]() -> void {
+                    entry.second->run();
+                });
+                if (entry.second->repeat()) {
+                    entry.second->restart(now);
+                    this->insert(entry.second);
+                }
+            }
+
+        }
+    };
+    ThreadPool::instance().enqueue(doLoop);
 #endif
 }
 
@@ -93,34 +121,43 @@ TimerQueue::~TimerQueue() {
     timerfdChannel_.disableAll();
     timerfdChannel_.remove();
     ::close(timerfd_);
-    // do not remove channel, since we're in EventLoop::dtor();
-//    for (Entry &timer : timers_) {
-//        timer.second = nullptr;
-//    }
+#ifdef __WINDOWS__
+    this->stop_ = true;
+#endif
 }
 
 TimerId TimerQueue::addTimer(const TimerCallback &cb,
                              Timestamp when,
                              double interval) {
-    auto *timer = new Timer(cb, when, interval);
+#ifdef linux
+//    auto *timer = new Timer(cb, when, interval);
+    auto timer = std::make_shared<Timer>(cb, when, interval);
     loop_->runInLoop(
             [this, timer] { addTimerInLoop(timer); });
     return {timer, timer->sequence()};
+#elif defined(__WINDOWS__)
+#endif
 }
 
 void TimerQueue::cancel(TimerId timerId) {
+#ifdef linux
     loop_->runInLoop(
             [this, timerId] { cancelInLoop(timerId); });
+#elif defined(__WINDOWS__)
+#endif
 }
 
-void TimerQueue::addTimerInLoop(Timer *timer) {
+void TimerQueue::addTimerInLoop(const TimerPtr& timer) {
+#ifdef linux
     loop_->assertInLoopThread();
-    TimerPtr t(timer);
-    bool earliestChanged = this->insert(t);
+    bool earliestChanged = this->insert(timer);
 
     if (earliestChanged) {
         resetTimerfd(timerfd_, timer->expiration());
     }
+#elif defined(__WINDOWS__)
+
+#endif
 }
 
 void TimerQueue::cancelInLoop(TimerId timerId) {
@@ -161,10 +198,10 @@ void TimerQueue::handleRead() {
 }
 
 std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now) {
+    std::vector<Entry> expired;
 #ifdef linux
     assert(timers_.size() == activeTimers_.size());
-    std::vector<Entry> expired;
-    Entry sentry(now, reinterpret_cast<Timer *>(UINTPTR_MAX));
+    Entry sentry(now, TimerPtr());
     auto end = timers_.lower_bound(sentry);
     assert(end == timers_.end() || now < end->first);
     std::copy(timers_.begin(), end, back_inserter(expired));
@@ -172,19 +209,33 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now) {
 
     for (const Entry &it : expired) {
         ActiveTimer timer(it.second, it.second->sequence());
-        size_t n = activeTimers_.erase(timer);
-        assert(n == 1);
-        (void) n;
+        //fixme To improve the efficiency of erase here
+        auto eraseItem = activeTimers_.begin();
+        for (; eraseItem != activeTimers_.end(); ++eraseItem) {
+            if (eraseItem->first->sequence() == it.second->sequence()) {
+                activeTimers_.erase(eraseItem);
+                break;
+            }
+        }
     }
 
     assert(timers_.size() == activeTimers_.size());
 #elif defined(__WINDOWS__)
-    std::vector<Entry> expired;
+    {
+        std::lock_guard<std::mutex> lock(this->lock_);
+        auto end = this->activeTimers_.lower_bound(now);
+        for (auto it = this->activeTimers_.begin(); it != end; ++it) {
+            expired.emplace_back(Entry{it->first, it->second});
+        }
+        this->activeTimers_.erase(this->activeTimers_.begin(), end);
+    }
+
 #endif
     return expired;
 }
 
 void TimerQueue::reset(const std::vector<Entry> &expired, Timestamp now) {
+#ifdef linux
     Timestamp nextExpire;
     for (const Entry &it : expired) {
         ActiveTimer timer(it.second, it.second->sequence());
@@ -202,9 +253,12 @@ void TimerQueue::reset(const std::vector<Entry> &expired, Timestamp now) {
     if (nextExpire.valid()) {
         resetTimerfd(timerfd_, nextExpire);
     }
+#elif defined(__WINDOWS__)
+#endif
 }
 
 bool TimerQueue::insert(const TimerPtr &timer) {
+#ifdef linux
     loop_->assertInLoopThread();
     assert(timers_.size() == activeTimers_.size());
     bool earliestChanged = false;
@@ -220,7 +274,7 @@ bool TimerQueue::insert(const TimerPtr &timer) {
         (void) result;
     }
     {
-        std::pair<ActiveTimerList::iterator, bool> result
+        std::pair<ActiveTimerSet::iterator, bool> result
                 = activeTimers_.insert(ActiveTimer(timer, timer->sequence()));
         assert(result.second);
         (void) result;
@@ -228,5 +282,9 @@ bool TimerQueue::insert(const TimerPtr &timer) {
 
     assert(timers_.size() == activeTimers_.size());
     return earliestChanged;
+#elif defined(__WINDOWS__)
+    std::lock_guard<std::mutex> lk(this->lock_);
+    this->activeTimers_.insert({timer->expiration(), timer});
+#endif
 }
 

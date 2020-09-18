@@ -4,14 +4,16 @@
 #include <cstdio>
 
 #include "CurrentThread.h"
-
+#ifdef __WINDOWS__
+#include <windows.h>
+#endif
 
 using namespace net;
 
 __thread int CurrentThread::t_cachedTid = 0;
 __thread char CurrentThread::t_tidString[32];
 __thread int CurrentThread::t_tidStringLength = 6;
-__thread const char* CurrentThread::t_threadName = "unknown";
+__thread const char *CurrentThread::t_threadName = "unknown";
 
 void CurrentThread::cacheTid() {
     if (t_cachedTid == 0) {
@@ -21,7 +23,11 @@ void CurrentThread::cacheTid() {
 }
 
 pid_t CurrentThread::gettid() {
+#ifdef linux
     return static_cast<pid_t>(::syscall(SYS_gettid));
+#elif defined(__WINDOWS__)
+    return static_cast<pid_t>(GetCurrentThreadId());
+#endif
 }
 
 inline const char *CurrentThread::tidString() {

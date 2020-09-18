@@ -9,10 +9,13 @@
 #include <string>
 
 #include <cstdlib>
-#include <sys/syscall.h>
 #include <unistd.h>
 #include <chrono>
 
+#include "platform.h"
+#ifdef linux
+#include <sys/syscall.h>
+#endif
 
 #include "Timestamp.h"
 

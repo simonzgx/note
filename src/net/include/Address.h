@@ -13,19 +13,13 @@
 #include "SocketOption.h"
 
 #ifdef linux
-#include <netdb.h>
 
-// INADDR_ANY use (type)value casting.
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-static const in_addr_t kInaddrAny = INADDR_ANY;
-static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
-#pragma GCC diagnostic error "-Wold-style-cast"
+#include <netdb.h>
 
 #elif defined(__WINDOWS__)
 #include <inaddr.h>
 // INADDR_ANY use (type)value casting.
 static in_addr kInaddrAny;
-kInaddrAny.S_un = 0;
 #endif
 
 namespace net {
@@ -39,7 +33,7 @@ namespace net {
 
         /// Constructs an endpoint with given ip and port.
         /// @c ip should be "1.2.3.4"
-        Address(const string& ip, uint16_t port, bool ipv6 = false);
+        Address(const string &ip, uint16_t port, bool ipv6 = false);
 
         /// Constructs an endpoint with given struct @c sockaddr_in
         /// Mostly used when accepting new connections
@@ -70,7 +64,7 @@ namespace net {
         // resolve hostname to IP address, not changing port or sin_family
         // return true on success.
         // thread safe
-        static bool resolve(const string& hostname, Address *result);
+        static bool resolve(const string &hostname, Address *result);
         // static std::vector<Address> resolveAll(const char* hostname, uint16_t port = 0);
 
         // set IPv6 ScopeID

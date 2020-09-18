@@ -6,9 +6,9 @@
 #include "End.h"
 
 #ifdef __WINDOWS__
+#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <Winsock.h>
-#include <winsock2.h>
 #elif defined(linux)
 #include <sys/uio.h>  // readv
 #include <unistd.h>

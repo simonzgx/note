@@ -11,6 +11,7 @@ const size_t Buffer::kCheapPrepend;
 const size_t Buffer::kInitialSize;
 
 ssize_t Buffer::readFd(int fd, int *savedErrno) {
+#ifdef linux
     // saved an ioctl()/FIONREAD call to tell how much to read
     char extrabuf[65536];
     struct iovec vec[2];
@@ -33,4 +34,6 @@ ssize_t Buffer::readFd(int fd, int *savedErrno) {
         append(extrabuf, n - writable);
     }
     return n;
+#elif defined(__WINDOWS__)
+#endif
 }

@@ -13,8 +13,9 @@
 #include "SocketOption.h"
 #include "EventBase.h"
 #include "Address.h"
+#include "platform.h"
 
-#ifdef WIN32
+#ifdef __WINDOWS__
 #define O_CLOEXEC 0xffff
 #endif
 

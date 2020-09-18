@@ -10,18 +10,16 @@
 #include <cstdint>
 #include <sys/types.h>
 
+#include "logger.h"
 #include "platform.h"
 
-#ifdef __WINDOWS__
-#include <winsock.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#define sa_family_t int
-#elif defined (linux)
+#ifdef linux
 #include <arpa/inet.h>
+#elif defined (__WINDOWS__)
+#define sa_family_t int
 #endif
 
-#include "logger.h"
+
 
 namespace net {
     namespace sockets {

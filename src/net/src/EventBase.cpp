@@ -14,9 +14,8 @@
 #include "logger.h"
 #include "Poller.h"
 #include "CurrentThread.h"
-#include "SocketOption.h"
 #include "platform.h"
-
+#include "SocketOption.h"
 #ifdef linux
 #include <sys/eventfd.h>
 #elif defined(__WINDOWS__)
