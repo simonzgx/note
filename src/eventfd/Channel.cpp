@@ -6,6 +6,7 @@
 #include <sys/eventfd.h>
 #include <cassert>
 #include <unistd.h>
+#include <iostream>
 
 
 #include "Channel.h"
@@ -27,10 +28,11 @@ namespace {
 
 
 Channel::Channel(ChannelBus *bus, size_t size) : fd_(createEventFD()), bus_(bus),
-                                                 events_(kNoneEvent), size_(size) {
+                                                 events_(kReadEvent), size_(size) {
     update();
     //default close callback function
     closeCb_ = [](Channel *chan) -> void {
+        std::cout << "close callback" << std::endl;
         chan->push(CLOSE_SIGNAL);
         chan->remove();
     };
