@@ -36,6 +36,7 @@ int main() {
             } else {
                 cout << "errno:" << errno << " errmsg:" << std::strerror(errno) << endl;
             }
+            this_thread::sleep_for(chrono::seconds(1));
         }
         chan.close();
     });
