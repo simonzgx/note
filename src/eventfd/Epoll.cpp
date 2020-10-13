@@ -5,6 +5,8 @@
 #include <sys/epoll.h>
 #include <cassert>
 #include <unistd.h>
+#include <iostream>
+
 
 #include "Epoll.h"
 #include "ChannelBus.h"
@@ -42,6 +44,7 @@ void gochan::Epoll::poll(int timeoutMs, gochan::ChannelList *activeChannels) {
                                  timeoutMs);
     int savedErrno = errno;
     if (numEvents > 0) {
+        std::cout << "numEvents: " << numEvents << std::endl;
         fillActiveChannels(numEvents, activeChannels);
         if (static_cast<size_t>(numEvents) == events_.size()) {
             events_.resize(events_.size() * 2);

@@ -65,7 +65,7 @@ namespace gochan {
 
         void remove();
 
-        void close() const;
+        void close();
 
         void registerMsgCallback(ReadCallback &cb) { eventCb_.emplace_back(cb); };
 

@@ -14,9 +14,10 @@ int main() {
 
     Channel chan(ChannelBus::getInstance());
     ReadCallback cb = [](Channel *c) -> void {
+        cout << "ReadCallback" << endl;
         void *tmp = c->pop();
         if (tmp == CLOSE_SIGNAL) {
-            printf("receive close signal!\n");
+            cout << "receive close signal!" << endl;
             return;
         } else {
             cout << "read:" << *static_cast<int *>(tmp) << endl;
@@ -26,7 +27,6 @@ int main() {
     chan.registerMsgCallback(cb);
     thread th([&]() -> void {
         for (int i = 0; i < 3;) {
-            this_thread::sleep_for(chrono::seconds(1));
             int *tmp = new int(i);
             chan.push(tmp);
             EVENT_SIGNAL val;

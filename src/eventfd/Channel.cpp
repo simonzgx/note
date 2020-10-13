@@ -7,7 +7,6 @@
 #include <cassert>
 #include <unistd.h>
 
-
 #include "Channel.h"
 #include "ChannelBus.h"
 
@@ -27,7 +26,7 @@ namespace {
 
 
 Channel::Channel(ChannelBus *bus, size_t size) : fd_(createEventFD()), bus_(bus),
-                                                 events_(kNoneEvent), size_(size) {
+                                                 events_(kReadEvent), size_(size) {
     update();
     //default close callback function
     closeCb_ = [](Channel *chan) -> void {
@@ -53,7 +52,6 @@ void Channel::update() {
 }
 
 void Channel::handleEvent() {
-
     if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
         perror("POLLHUP warning");
         closeCb_(this);
@@ -69,8 +67,8 @@ void Channel::handleEvent() {
     }
 }
 
-void Channel::close() const {
-    if (fd_) {
-        ::close(fd_);
-    }
+void Channel::close() {
+    this->push(CLOSE_SIGNAL);
+    EVENT_SIGNAL val;
+    write(fd_, &val, sizeof val);
 }
