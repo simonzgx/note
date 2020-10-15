@@ -10,69 +10,67 @@
 
 using namespace std;
 
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-
-struct TreeNode {
+// Definition for a Node.
+class Node {
+public:
     int val;
-    TreeNode *left;
-    TreeNode *right;
+    Node *left;
+    Node *right;
+    Node *next;
 
-    explicit TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+    Node() : val(0), left(nullptr), right(nullptr), next(nullptr) {}
+
+    explicit Node(int _val) : val(_val), left(nullptr), right(nullptr), next(nullptr) {}
+
+    Node(int _val, Node *_left, Node *_right, Node *_next)
+            : val(_val), left(_left), right(_right), next(_next) {}
 };
 
 class Solution {
 public:
 
-    vector<int> rightSideView(TreeNode *root) {
-        vector<int> ans;
-        if (!root)return ans;
-        vector<TreeNode *> s1, s2;
-        unsigned depth = 0;
-        s1.emplace_back(root);
-        while (true) {
-            depth++;
-            if (depth & (unsigned) 1) {
-                ans.emplace_back(s1[s1.size() - 1]->val);
-                for (const auto &node:s1) {
-                    if (node->left)s2.emplace_back(node->left);
-                    if (node->right)s2.emplace_back(node->right);
-                }
-                if (s2.empty())break;
-                s1.clear();
-                continue;
-            }
-            ans.emplace_back(s2[s2.size() - 1]->val);
-            for (const auto &node:s2) {
-                if (node->left)s1.emplace_back(node->left);
-                if (node->right)s1.emplace_back(node->right);
-            }
-            if (s1.empty())break;
-            s2.clear();
-        }
+    void bfs(Node *node) {
 
-        return ans;
     }
 
+    Node *connect(Node *root) {
+        vector<Node *> stack1, stack2;
+        vector<Node *> *s1 = &stack1, *s2 = &stack2;
+        s1->push_back(root);
+        s1->push_back(nullptr);
+        int i = 0, j;
+        while (s1->front()) {
+            for (j = 0; j < s1->size() - 1; ++j) {
+                (*s1)[j]->next = (*s1)[j + 1];
+                if ((*s1)[j]->left) {
+                    s2->push_back((*s1)[j]->left);
+                    s2->push_back((*s1)[j]->right);
+                }
+            }
+            s2->push_back(nullptr);
+            s1->clear();
+            if (i % 2 == 0) {
+                s1 = &stack2;
+                s2 = &stack1;
+            } else {
+                s1 = &stack1;
+                s2 = &stack2;
+            }
+            ++i;
+        }
+        return root;
+    }
 };
 
 int main() {
     Solution s;
-    TreeNode n1(1), n2(2), n3(3), n4(5), n5(4);
+    Node n1(1), n2(2), n3(3), n4(4), n5(5), n6(6), n7(7);
     n1.left = &n2;
-    n2.right = &n4;
     n1.right = &n3;
-    n3.right = &n5;
-    auto ans = s.rightSideView(&n1);
-    for (int &v: ans) {
-        cout << v << " ";
-    }
-    cout << endl;
+    n2.left = &n4;
+    n2.right = &n5;
+    n3.left = &n6;
+    n3.right = &n7;
+    auto ans = s.connect(&n1);
+    cout << ans->left->next->val << endl;
 }
