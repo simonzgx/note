@@ -50,7 +50,7 @@ def parse_option():
             sys.exit()
         elif opt in ("-o", "--output"):
             output = value
-        elif opt in ("-t", "--threds"):
+        elif opt in ("-t", "--threads"):
             threadsNum = int(value)
         elif opt in ("-d", "--dir"):
             fileDir = value
