@@ -22,7 +22,7 @@ void ring_buffer<_Tp>::skip(size_t size) {
 
 template<class _Tp>
 int ring_buffer<_Tp>::read(_Tp *out, size_t size) {
-    int read_size = std::min(size, _used);
+    size_t read_size = std::min(size, _used);
     int to_end = std::min(read_size, _size - _r_offset);
     memcpy(out, _buf[_r_offset], to_end);
     if (to_end < read_size) {
@@ -36,8 +36,8 @@ int ring_buffer<_Tp>::read(_Tp *out, size_t size) {
 template<class _Tp>
 int ring_buffer<_Tp>::write(const _Tp *value, size_t size) {
     if (!value || !size)return 0;
-    int write_size = std::min(_size - _used, size);
-    int to_end = std::min(write_size, _size - _w_offset);
+    size_t write_size = std::min(_size - _used, size);
+    size_t to_end = std::min(write_size, _size - _w_offset);
     memcpy(_buf[_w_offset], value, to_end);
     if (to_end < write_size) {
         memcpy(_buf, value, write_size - to_end);
