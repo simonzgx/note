@@ -180,19 +180,43 @@ const Message *recv() {
 }
 
 int main() {
-    auto shm = std::make_shared<IPC::ShmObj<Message>>("test.txt", MESSAGE_SIZES[4]);
-    auto record_func = [](const Message *msg) -> void { record(msg); };
-    shm->start_produce();
+    // shm with sema
+    // auto shm = std::make_shared<IPC::ShmObj<Message>>("test.txt", MESSAGE_SIZES[4]);
+    // auto record_func = [](const Message *msg) -> void { record(msg); };
+    // shm->start_produce();
+    // while (true) {
+    //     const Message *m1 = next_message();
+    //     if (m1) {
+    //         shm->send_receive_process(m1, record_func);
+    //     } else {
+    //         time_t dt = now() - test_cases.front().first;
+    //         timespec req = {dt / SECOND_TO_NANO, dt % SECOND_TO_NANO}, rem;
+    //         nanosleep(&req, &rem); // 等待到下一条消息的发送时间
+    //     }
+    // }
+    int i = 0;
+    // smh with ring buffer
+    auto shm = std::make_shared<IPC::ShmWithRingBuffer<Message>>("test.txt", MESSAGE_SIZES[4]);
+    std::thread th([=]() -> void {
+        while (true) {
+            Message &new_msg = shm->check();
+            record(&new_msg);
+        }
+    });
+    th.detach();
     while (true) {
         const Message *m1 = next_message();
         if (m1) {
-            shm->send_receive_process(m1, record_func);
+            // shm->send_and_process(m1, [](const Message &msg) -> void {
+            //     record(&msg);
+            // });
+            shm->send(m1);
+            std::cout << i++ << std::endl;
         } else {
             time_t dt = now() - test_cases.front().first;
             timespec req = {dt / SECOND_TO_NANO, dt % SECOND_TO_NANO}, rem;
             nanosleep(&req, &rem); // 等待到下一条消息的发送时间
         }
     }
-
     return 0;
 }

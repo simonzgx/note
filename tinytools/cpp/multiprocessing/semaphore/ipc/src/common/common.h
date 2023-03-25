@@ -1,4 +1,7 @@
 // c
+#ifndef COMMON_H
+#define COMMON_H
+
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -121,14 +124,4 @@ long crc32(const Message *message) {
 /* --------------------------------------不得修改两条分割线之间的内容--------------------------------------
  */
 
-class MessageSender {
-public:
-    MessageSender() {
-    }
-
-    virtual const Message *send() = 0;
-
-private:
-};
-
-class SharedMemSender : public MessageSender {};
+#endif // COMMON_H
