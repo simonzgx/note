@@ -6,3 +6,4 @@ CMakeCache.txt
 CMakeFiles
 *.cbp
 cmake-build-debug
+.DS_Store

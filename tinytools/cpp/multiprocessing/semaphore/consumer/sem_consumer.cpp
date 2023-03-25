@@ -1,107 +1,80 @@
-//
-// Created by Simon on 2020/3/28.
-//
-
-#include <iostream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/sem.h>
+#include <sys/sem.h> //sembuf, SEM_UNDO,semget,semop 相关声明和宏定义都在这里
+#include <sys/shm.h> //shmget,shmat,shmdt 相关声明都在这里
 
-using namespace std;
+#define SHMSIZE 1024
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *arry;
-};
+typedef struct sembuf SB; //将sembuf重命名
 
-static int sem_id = 0;
+int main() {
+  int res = -1, shmid = 0, semid = 0;
+  key_t key = IPC_PRIVATE;
+  char *shmaddr = NULL;
+  SB sem_v0 = {0, 1, SEM_UNDO}, //构建对第一个信号量进行V操作的参数
+      sem_p1 = {1, -1, SEM_UNDO}; //构建对第二个信号量进行P操作的参数
 
-static int set_semvalue();
+  if (-1 == (key = ftok("/", 888))) //生成key
+  {
+    perror("ftok");
+    return res;
+  }
+  if (0 > (shmid = shmget(
+               key, SHMSIZE,
+               IPC_CREAT | 0600))) //使用key创建或获取共享内存ID,大小为1024字节
+                                   // or use getpagesize() instead
+  {
+    perror("shmget");
+    return res;
+  } else
+    printf("created shared memory :%d\n", shmid); //将共享内存的ID进行显示
 
-static void del_semvalue();
+  if ((char *)0 > (shmaddr = static_cast<char *>(
+                       shmat(shmid, 0, 0)))) //通过共享内存的ID获取内存地址
+  {
+    perror("shmat");
+    return res;
+  } else
+    printf("attached shared memory:%p\n", shmaddr); //将共享内存的地址进行打印
 
-static int semaphore_p();
+  if (0 >
+      (semid = semget(key, 2, IPC_CREAT | 0600))) //通过key创建两个信号量的ID
+  {
+    perror("semget");
+    return res;
+  } else
+    printf("created a sem set with two sems which id is :%d\n", semid);
 
-static int semaphore_v();
-
-int main(int argc, char *argv[]) {
-    int i = 0;
-
-    //创建信号量
-    sem_id = semget((key_t) 1234, 1, 0666 | IPC_CREAT);
-
-    while (true) {
-        //进入临界区
-        cout << "consumer wait\n";
-        if (!semaphore_p())
-            exit(EXIT_FAILURE);
-        //向屏幕中输出数据
-        cout << "consumer...\n";
-        sleep(rand() % 3);
-        //离开临界区，休眠随机时间后继续循环
-        if (!semaphore_v())
-            exit(EXIT_FAILURE);
-        cout << "consumer done\n";
-        sleep(rand() % 1);
+  do {
+    if (0 > semop(semid, &sem_p1, 1)) //对第二个信号量进行P操作
+    {
+      perror("semop");
+      return res;
     }
+    printf("from shm :%s", shmaddr); //将共享内存中的内容进行打印
 
-    sleep(10);
-    printf("\n%d - finished\n", getpid());
-
-    if (argc > 1) {
-        //如果程序是第一次被调用，则在退出前删除信号量
-        sleep(3);
-        del_semvalue();
+    if (0 == strcmp(shmaddr, "quit\n"))
+      break; //如果内容为 quit，则直接退出循环
+    if (0 > semop(semid, &sem_v0, 1)) //对第一个信号量进行V操作
+    {
+      perror("semop");
+      return res;
     }
-    exit(EXIT_SUCCESS);
-}
+  } while (1);
 
-static int set_semvalue() {
-    //用于初始化信号量，在使用信号量前必须这样做
-    union semun sem_union;
+  if (0 > (shmdt(shmaddr))) //分享共享内存
+  {
+    perror("shmdt");
+    return res;
+  } else
+    printf("Deattach shared-memory\n");
 
-    sem_union.val = 1;
-    if (semctl(sem_id, 0, SETVAL, sem_union) == -1)
-        return 0;
-    return 1;
-}
+  if (0 > semop(semid, &sem_v0, 1)) //对第一个信号量进行V操作
+  {
+    perror("semop");
+    return res;
+  }
 
-static void del_semvalue() {
-    //删除信号量
-    union semun sem_union;
-
-    if (semctl(sem_id, 0, IPC_RMID, sem_union) == -1)
-        fprintf(stderr, "Failed to delete semaphore\n");
-}
-
-static int semaphore_p() {
-    //对信号量做减1操作，即等待P（sv）
-    struct sembuf sem_b;
-    sem_b.sem_num = 0;
-    sem_b.sem_op = -1;//P()
-    sem_b.sem_flg = SEM_UNDO;
-    if (semop(sem_id, &sem_b, 1) == -1) {
-        fprintf(stderr, "semaphore_p failed\n");
-        return 0;
-    }
-    return 1;
-}
-
-static int semaphore_v() {
-    //这是一个释放操作，它使信号量变为可用，即发送信号V（sv）
-    struct sembuf sem_b;
-    sem_b.sem_num = 0;
-    sem_b.sem_op = 1;//V()
-    sem_b.sem_flg = SEM_UNDO;
-    if (semop(sem_id, &sem_b, 1) == -1) {
-        fprintf(stderr, "semaphore_v failed\n");
-        return 0;
-    }
-    return 1;
+  res = 0;
+  return res;
 }

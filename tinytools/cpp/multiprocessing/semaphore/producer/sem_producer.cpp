@@ -1,133 +1,121 @@
-//
-// Created by Simon on 2020/3/28.
-//
+#include <stdio.h>
+#include <string.h> //memset,strcmp  相关函数声明都在这里
+#include <sys/sem.h> //sembuf,SEM_UNDO,SETALL 相关声明和宏定义都在这里
+#include <sys/shm.h> //shmget,shmat,shmdt,shmctl 相关声明都在这里
 
-#include <iostream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <cstdlib>
-#include <cstdio>
-#include <sys/sem.h>
-#include <sys/mman.h>
+#define SHMSIZE 1024
 
-using namespace std;
+typedef struct sembuf SB; // 将sembuf重命名
 
-#define FILE_PATH "../test.txt"
+// union semun //定义semun共用体作为参数
+// {
+//   int val;              // value for SETVAL  设定一个值可以用
+//   struct semid_ds *buf; // buffer for IPC_STAT & IPC_SET  获取状态可以使用
+//   unsigned short
+//       *array; // array for GETALL & SETALL  设定所有值或获取所有值可以使用
+//   struct seminfo *__buf; // buffer for IPC_INFO 获取信息可以用
+//   void *__pad;           //万能指针
+// };
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *arry;
-};
+int main() {
+  int res = -1, shmid = 0, semid = 0;
+  key_t key = IPC_PRIVATE;
+  char *shmaddr = NULL;          //定义一个共享内存的指针
+  SB sem_p0 = {0, -1, SEM_UNDO}, //构建对第一个信号量进行P操作的参数
+      sem_v0 = {0, 1, SEM_UNDO}, //构建对第一个信号量进行V操作的参数
+      sem_v1 = {1, 1, SEM_UNDO}; //构建对第二个信号量进行V操作的参数
+  union semun sem_args;
+  unsigned short array[2] = {0, 0}; //构建数组
 
-static int sem_id = 0;
+  sem_args.array = array; //构建出给两个信号量一起赋值的共用体参数
 
-static int set_semvalue();
+  if (-1 == (key = ftok("/", 888))) //生成key
+  {
+    perror("ftok");
+    return res;
+  }
+  if (0 > (shmid = shmget(
+               key, SHMSIZE,
+               IPC_CREAT |
+                   0600))) //使用shmget 创建或获取共享内存ID , 大小为1024个字节
+                           //， or use getpagesize() instead
+  {
+    perror("shmget");
+    return res;
+  } else
+    printf("created shared memory :%d\n", shmid); //显示出获取的共享内存ID
 
-static void del_semvalue();
+  if ((char *)0 > (shmaddr = static_cast<char *>(shmat(
+                       shmid, 0, 0)))) //通过ID获取地址，并且使用shmaddr进行指向
+  {
+    perror("shmat");
+    return res;
+  } else
+    printf("attached shared memory:%p\n", shmaddr); //将内存地址打印出来
 
-static int semaphore_p();
+  if (0 >
+      (semid = semget(key, 2, IPC_CREAT | 0600))) //通过key获取两个信号量的ID
+  {
+    perror("semget");
+    return res;
+  } else
+    printf("created a sem set with two sems which id is :%d\n",
+           semid); //将信号量ID打印出来
 
-static int semaphore_v();
+  if (0 > semctl(semid, 0, SETALL,
+                 sem_args)) //将两个信号量一起赋值为0，设置值存于sem_args中
+  {
+    perror("semctl");
+    return res;
+  } else
+    printf("semset has been initialized\n");
 
-int main(int argc, char *argv[]) {
-    int fd;
-    struct stat fs{};
-    char *mapped_mem, buf[1024];
+  if (0 > semop(semid, &sem_v0, 1)) //对第一个信号量进行V操作
+  {
+    perror("semop");
+    return res;
+  }
 
-    if ((fd = open(argv[1], O_RDWR)) < 0) {
-        perror("open");
+  memset(shmaddr, 0, SHMSIZE); //将共享内存置0
+
+  do {
+    if (0 > semop(semid, &sem_p0, 1)) //对第一个信号量进行P操作
+    {
+      perror("semop");
+      return res;
     }
-    if (fstat(fd, &fs) == -1) {
-        perror("fstat error");
+    puts("please enter the message to shm:\n('quit' to exit)");
+    if (NULL == (fgets(shmaddr, SHMSIZE, stdin))) //将输入内容写到共享内存中
+    {
+      perror("fgets");
+      return res;
     }
-
-    if ((mapped_mem = static_cast<char *>(mmap(nullptr, fs.st_size,
-                                               PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0))) == (void *) -1) {
-        perror("mmap");
+    if (0 > semop(semid, &sem_v1, 1)) //对第二个信号量进行V操作
+    {
+      perror("semop");
+      return res;
     }
+  } while (strcmp(shmaddr, "quit\n")); //如果输入为quit就退出
 
-    close(fd);
+  if (0 > (shmdt(shmaddr))) //分离共享内存
+  {
+    perror("shmdt");
+    return res;
+  } else
+    printf("Deattach shared-memory\n");
 
-    int i = 0;
+  if (0 > semop(semid, &sem_p0, 1)) //对第一个信号量进行P操作
+  {
+    perror("semop");
+    return res;
+  }
 
-    //创建信号量
-    sem_id = semget((key_t) 1234, 1, 0666 | IPC_CREAT);
-
-    if (argc > 1) {
-        //程序第一次被调用，初始化信号量
-        if (!set_semvalue()) {
-            fprintf(stderr, "Failed to initialize semaphore\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-    while (true) {
-        cout << "producer wait" << endl;
-        //进入临界区
-        if (!semaphore_p())
-            exit(EXIT_FAILURE);
-
-        cout << "producing..." << endl;
-        sleep(rand() % 5);
-        if (!semaphore_v())
-            exit(EXIT_FAILURE);
-        cout << "produce done\n";
-        sleep(rand() % 1);
-    }
-
-    sleep(10);
-    printf("\n%d - finished\n", getpid());
-
-    if (argc > 1) {
-        //如果程序是第一次被调用，则在退出前删除信号量
-        sleep(3);
-        del_semvalue();
-    }
-    exit(EXIT_SUCCESS);
-}
-
-static int set_semvalue() {
-    //用于初始化信号量，在使用信号量前必须这样做
-    union semun sem_union;
-
-    sem_union.val = 1;
-    if (semctl(sem_id, 0, SETVAL, sem_union) == -1)
-        return 0;
-    return 1;
-}
-
-static void del_semvalue() {
-    //删除信号量
-    union semun sem_union;
-
-    if (semctl(sem_id, 0, IPC_RMID, sem_union) == -1)
-        fprintf(stderr, "Failed to delete semaphore\n");
-}
-
-static int semaphore_p() {
-    //对信号量做减1操作，即等待P（sv）
-    struct sembuf sem_b;
-    sem_b.sem_num = 0;
-    sem_b.sem_op = -1;//P()
-    sem_b.sem_flg = SEM_UNDO;
-    if (semop(sem_id, &sem_b, 1) == -1) {
-        fprintf(stderr, "semaphore_p failed\n");
-        return 0;
-    }
-    return 1;
-}
-
-static int semaphore_v() {
-    //这是一个释放操作，它使信号量变为可用，即发送信号V（sv）
-    struct sembuf sem_b;
-    sem_b.sem_num = 0;
-    sem_b.sem_op = 1;//V()
-    sem_b.sem_flg = SEM_UNDO;
-    if (semop(sem_id, &sem_b, 1) == -1) {
-        fprintf(stderr, "semaphore_v failed\n");
-        return 0;
-    }
-    return 1;
+  if (0 > shmctl(shmid, IPC_RMID, NULL)) //删除和释放共享内存
+  {
+    perror("shmctl(IPC_RMID)\n");
+    return res;
+  } else
+    printf("Delete shared-memory\n");
+  res = 0;
+  return res;
 }
