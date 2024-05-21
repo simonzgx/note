@@ -108,3 +108,5 @@ alias gf='git fetch'
 alias gp='git pull'
 alias gs='git status'
 alias g='git '
+export CC=`which clang`
+export CXX=`which clang++`
