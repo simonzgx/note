@@ -8,6 +8,6 @@ git config --global user.name "Xu Zhang"
 git config --global user.email "simonzgx@gmail.com"
 
 sudo apt update
-sudo apt -y install zsh cmake ninja-build clangd
+sudo apt -y install zsh cmake ninja-build clangd ccache
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
