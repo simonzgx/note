@@ -110,3 +110,4 @@ alias gs='git status'
 alias g='git '
 export CC=`which clang`
 export CXX=`which clang++`
+export PATH=$PATH:$HOME/.local/bin
