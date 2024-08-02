@@ -108,7 +108,5 @@ alias gf='git fetch'
 alias gp='git pull'
 alias gs='git status'
 alias g='git '
-export CC=`which clang`
-export CXX=`which clang++`
 export PATH=$PATH:$HOME/.local/bin:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64
