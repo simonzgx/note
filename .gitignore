@@ -7,3 +7,7 @@ CMakeFiles
 *.cbp
 cmake-build-debug
 .DS_Store
+.vscode/*
+build/*
+test
+.cache/*
